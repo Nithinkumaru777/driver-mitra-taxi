@@ -1,0 +1,186 @@
+// All site copy and business data. Components receive text from here only.
+// Never invent prices, names or facts: unknowns stay TBD until the client confirms (BRIEF §10).
+
+export const TBD = '[TBD]';
+
+export const locales = ['en', 'hi', 'kn'] as const;
+export type Locale = (typeof locales)[number];
+
+/* ---------- Locale-independent data ---------- */
+
+export const contact = {
+  phones: [
+    { display: '8296611117', tel: '+918296611117' },
+    { display: '9060772111', tel: '+919060772111' },
+  ],
+  whatsapp: TBD, // digits with country code, e.g. 91XXXXXXXXXX
+  email: TBD,
+  address: TBD,
+  mapEmbedUrl: TBD,
+};
+
+export type PlanYears = 3 | 4 | 5;
+
+export const plans: { years: PlanYears; dailyRent: string }[] = [
+  { years: 3, dailyRent: TBD },
+  { years: 4, dailyRent: TBD },
+  { years: 5, dailyRent: TBD },
+];
+
+/** Set to 3, 4 or 5 once the client confirms which plan to highlight. */
+export const mostPopularPlan: PlanYears | null = null;
+
+export const driversOnRoad = TBD;
+
+/** Add one entry per driver photo (only with the driver's consent). image: file name in public/drivers/. */
+export const gallery: { image: string | null; name: string; city: string; plan: string; handoverDate: string; quote?: string }[] = [
+  { image: null, name: TBD, city: TBD, plan: TBD, handoverDate: TBD },
+  { image: null, name: TBD, city: TBD, plan: TBD, handoverDate: TBD },
+  { image: null, name: TBD, city: TBD, plan: TBD, handoverDate: TBD },
+  { image: null, name: TBD, city: TBD, plan: TBD, handoverDate: TBD },
+];
+
+/* ---------- Translatable copy ---------- */
+
+const en = {
+  meta: {
+    title: 'Driver Mitra Taxi | Just Pay ₹10,000 For Your Car Booking',
+    description: 'Rent-to-own Dzire Tour S for taxi drivers. Pay ₹10,000 booking, drive anywhere on daily rent, and own the car after a 3, 4 or 5-year plan.',
+  },
+  brand: {
+    name: 'Driver Mitra Taxi',
+    tagline: 'Your Drive • Your Income • Your Car',
+    closing: 'Drive More • Earn More • Secure Future',
+  },
+  nav: {
+    items: [
+      { label: 'How It Works', href: '#how-it-works' },
+      { label: 'Our Car', href: '#our-car' },
+      { label: 'Plans', href: '#plans' },
+      { label: 'Our Drivers', href: '#our-drivers' },
+      { label: 'Benefits', href: '#benefits' },
+      { label: 'Contact', href: '#contact' },
+    ],
+    callNow: 'Call Now',
+    openMenu: 'Open menu',
+    closeMenu: 'Close menu',
+    skipLink: 'Skip to main content',
+  },
+  hero: {
+    headlineLead: 'Just Pay',
+    amount: '₹10,000',
+    headlineTrail: 'For Your Car Booking',
+    subline: 'Take a car, drive anywhere, and own it.',
+    ctaCall: 'Call Now',
+    ctaWhatsApp: 'WhatsApp Us',
+  },
+  keyPoints: [
+    { title: 'Take a Car & Drive Anywhere' },
+    { title: 'Attach Anywhere', detail: 'Ola, Uber or Other Company' },
+    { title: 'Drive and Own the Car' },
+  ],
+  howItWorks: {
+    heading: 'How It Works',
+    steps: [
+      'Pay ₹10,000 booking',
+      'Get your Dzire Tour S',
+      'Drive anywhere & pay daily rental',
+      'Complete your plan & own the car',
+    ],
+  },
+  car: {
+    heading: 'New Dzire Tour S — Daily Rentals',
+    modelLabel: '3D model of the Maruti Suzuki Dzire Tour S. Drag to rotate.',
+    dragHint: 'Drag to rotate 360°',
+    arButton: 'View in your space',
+    loading: 'Loading 3D car',
+    specs: [
+      { label: 'Fuel type', value: TBD },
+      { label: 'Seating', value: TBD },
+      { label: 'Mileage', value: TBD },
+      { label: 'Boot space', value: TBD },
+    ],
+    hotspots: [
+      { label: 'Spacious boot', detail: TBD },
+      { label: 'CNG option', detail: TBD },
+      { label: 'Comfortable rear seats', detail: TBD },
+    ],
+  },
+  plans: {
+    heading: 'Buy Your Own Car Today',
+    planTitle: (years: number) => `${years} Years Flexible Plan`,
+    dailyRent: (rent: string) => `Daily rent: ₹${rent}`,
+    enquire: 'Enquire',
+    mostPopular: 'Most Popular',
+  },
+  drivers: {
+    heading: 'Happy Drivers, New Cars',
+    subline: 'Real drivers who received their car from Driver Mitra',
+    counter: (count: string) => `${count}+ drivers on the road`,
+    alt: (name: string, city: string) => `${name} from ${city} receiving his Dzire Tour S`,
+    photoComing: 'Photo coming soon',
+    lightbox: { close: 'Close photo', previous: 'Previous photo', next: 'Next photo' },
+  },
+  benefits: {
+    heading: 'Company Benefits',
+    items: ['Education Insurance Benefits', 'Health Insurance Benefits', 'For Driver and His Family'],
+    cta: 'Join Driver Mitra — Get All Benefits',
+  },
+  attach: {
+    heading: 'Attach Anywhere',
+    platforms: ['Ola', 'Uber', 'Other Companies'],
+    marquee: ['Ola', 'Uber', 'Any App', 'Drive Anywhere'],
+  },
+  faq: {
+    heading: 'Questions Drivers Ask',
+    items: [
+      { q: 'Is the ₹10,000 refundable?', a: TBD },
+      { q: 'What documents do I need?', a: TBD },
+      { q: 'What does the daily rent include?', a: TBD },
+      { q: 'Who pays for maintenance and insurance?', a: TBD },
+      { q: 'When does the car transfer to my name?', a: TBD },
+      { q: 'Can I choose which app to work with?', a: TBD },
+    ],
+  },
+  form: {
+    heading: 'Book Your Car',
+    name: 'Name',
+    mobile: 'Mobile number',
+    city: 'City',
+    plan: 'Preferred plan',
+    licence: 'Do you have a commercial driving licence/badge?',
+    yes: 'Yes',
+    no: 'No',
+    message: 'Message',
+    optional: 'optional',
+    submit: 'Send on WhatsApp',
+    success: 'WhatsApp is opening with your details. Send the message to finish your enquiry.',
+    errors: {
+      name: 'Enter your name.',
+      mobile: 'Enter a 10-digit mobile number starting with 6, 7, 8 or 9.',
+      city: 'Enter your city.',
+      plan: 'Choose a plan.',
+      licence: 'Choose Yes or No.',
+    },
+    whatsappIntro: 'New enquiry from the Driver Mitra website',
+  },
+  contact: {
+    heading: 'Contact Us',
+    call: 'Call',
+    whatsapp: 'WhatsApp',
+    address: 'Address',
+    email: 'Email',
+    map: 'Map',
+  },
+  mobileBar: { call: 'Call Now', whatsapp: 'WhatsApp' },
+  footer: {
+    copyright: (year: number) => `© ${year} Driver Mitra Taxi. All rights reserved.`,
+  },
+};
+
+export type Copy = typeof en;
+
+// Add `hi: Copy` and `kn: Copy` here; the type forces every string to be translated.
+const copy: { en: Copy } & Partial<Record<Locale, Copy>> = { en };
+
+export const getCopy = (locale: Locale = 'en'): Copy => copy[locale] ?? copy.en;

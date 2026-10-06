@@ -1,0 +1,198 @@
+---
+// Internal reference page: tokens + components. Not linked from the site.
+import { Phone, MessageCircle, Car, MapPin, ShieldCheck, GraduationCap, HeartPulse, Users, ChevronDown, Star } from '@lucide/astro';
+import Base from '../layouts/Base.astro';
+import Button from '../components/ui/Button.astro';
+import Card from '../components/ui/Card.astro';
+import Badge from '../components/ui/Badge.astro';
+import Checkered from '../components/ui/Checkered.astro';
+import tokensCss from '../styles/global.css?raw';
+import { getCopy, contact, plans } from '../content/site';
+
+const t = getCopy();
+
+// Read colors from global.css so the swatches and contrast checks can't drift from the real tokens.
+const colors = Object.fromEntries(
+  [...tokensCss.matchAll(/--color-([\w-]+):\s*(#[0-9a-fA-F]{6})/g)].map(([, name, hex]) => [name, hex.toUpperCase()]),
+);
+
+const luminance = (hex: string) => {
+  const [r, g, b] = [1, 3, 5].map((i) => {
+    const c = parseInt(hex.slice(i, i + 2), 16) / 255;
+    return c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
+  });
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+};
+const contrast = (a: string, b: string) => {
+  const [hi, lo] = [luminance(a), luminance(b)].sort((x, y) => y - x);
+  return (hi + 0.05) / (lo + 0.05);
+};
+
+// Every text/background pair the site is allowed to use. All must pass AA for normal text (4.5:1).
+const pairs: [fg: string, bg: string][] = [
+  ['ink', 'white'], ['ink-muted', 'white'], ['royal', 'white'],
+  ['ink', 'royal-tint'], ['ink-muted', 'royal-tint'], ['royal', 'royal-tint'],
+  ['white', 'royal'], ['taxi', 'royal'], ['mist', 'royal'],
+  ['white', 'royal-deep'], ['taxi', 'royal-deep'], ['mist', 'royal-deep'],
+  ['ink', 'taxi'], ['royal', 'taxi'], ['royal-deep', 'taxi'],
+];
+const rows = pairs.map(([fg, bg]) => ({ fg, bg, ratio: contrast(colors[fg], colors[bg]) }));
+const failures = rows.filter((r) => r.ratio < 4.5);
+if (failures.length) {
+  throw new Error(`Contrast below AA: ${failures.map((f) => `${f.fg} on ${f.bg} (${f.ratio.toFixed(2)})`).join(', ')}`);
+}
+// Never use as text: yellow on white.
+const forbidden = { fg: 'taxi', bg: 'white', ratio: contrast(colors.taxi, colors.white) };
+
+const typeScale = [
+  { token: 'text-display', class: 'text-display font-display uppercase', sample: `${t.hero.headlineLead} ${t.hero.amount}` },
+  { token: 'text-h1', class: 'text-h1 font-display uppercase', sample: t.plans.heading },
+  { token: 'text-h2', class: 'text-h2 font-display uppercase', sample: t.howItWorks.heading },
+  { token: 'text-h3', class: 'text-h3 font-display uppercase', sample: t.benefits.items[1] },
+  { token: 'text-lg / Inter', class: 'text-lg', sample: t.hero.subline },
+  { token: 'text-base / Inter', class: 'text-base', sample: t.drivers.subline },
+  { token: 'text-sm / Inter', class: 'text-sm text-ink-muted', sample: t.form.errors.mobile },
+];
+
+const icons = { Phone, MessageCircle, Car, MapPin, ShieldCheck, GraduationCap, HeartPulse, Users, ChevronDown, Star };
+const section = 'mx-auto max-w-6xl px-5 py-12 md:px-8';
+const label = 'mb-6 text-h3 font-display';
+---
+
+<Base title="Styleguide | Driver Mitra Taxi" description="Design tokens and components.">
+  <header class="bg-royal-deep text-white" data-surface="dark">
+    <div class={section}>
+      <p class="font-display text-h3 text-taxi">{t.brand.name}</p>
+      <h1 class="text-h1">Styleguide</h1>
+      <p class="mt-3 max-w-prose text-mist">Every token and component, rendered from the real CSS and content file.</p>
+    </div>
+    <Checkered />
+  </header>
+
+  <main>
+    <section class={section}>
+      <h2 class={label}>Colors</h2>
+      <ul class="grid grid-cols-2 gap-4 sm:grid-cols-4">
+        {Object.entries(colors).map(([name, hex]) => (
+          <li>
+            <div class="h-20 rounded-card border border-royal-tint" style={`background: var(--color-${name})`}></div>
+            <p class="mt-2 font-semibold">{name}</p>
+            <p class="text-sm text-ink-muted">{hex}</p>
+          </li>
+        ))}
+      </ul>
+
+      <h3 class="mt-10 mb-4 text-h3">Contrast (WCAG AA ≥ 4.5)</h3>
+      <ul class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        {rows.map((r) => (
+          <li class="flex items-center justify-between rounded-plate px-4 py-3" style={`color: var(--color-${r.fg}); background: var(--color-${r.bg})`}>
+            <span class="font-semibold">{r.fg} on {r.bg}</span>
+            <span>{r.ratio.toFixed(2)} · pass</span>
+          </li>
+        ))}
+      </ul>
+      <p class="mt-4 text-sm text-ink-muted">
+        Never use {forbidden.fg} as text on {forbidden.bg} ({forbidden.ratio.toFixed(2)}:1). Put yellow behind ink or royal text instead. The build fails if any listed pair drops below 4.5.
+      </p>
+    </section>
+
+    <section class={section}>
+      <h2 class={label}>Typography</h2>
+      <p class="mb-6 text-ink-muted">Display: Anton (uppercase, condensed). Body: Inter 400–700. Both self-hosted with font-display: swap.</p>
+      <ul class="space-y-6">
+        {typeScale.map((s) => (
+          <li class="border-b border-royal-tint pb-4">
+            <p class="mb-1 text-sm text-ink-muted">{s.token}</p>
+            <p class={s.class}>{s.sample}</p>
+          </li>
+        ))}
+      </ul>
+    </section>
+
+    <section class={section}>
+      <h2 class={label}>Radii, shadows, spacing</h2>
+      <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+        <div class="rounded-plate bg-royal-tint p-6"><p class="font-semibold">rounded-plate</p><p class="text-sm text-ink-muted">6px. Buttons, badges.</p></div>
+        <div class="rounded-card bg-royal-tint p-6"><p class="font-semibold">rounded-card</p><p class="text-sm text-ink-muted">1rem. Containers.</p></div>
+        <div class="rounded-card bg-white p-6 shadow-card"><p class="font-semibold">shadow-card</p><p class="text-sm text-ink-muted">Resting.</p></div>
+        <div class="rounded-card bg-white p-6 shadow-lift"><p class="font-semibold">shadow-lift</p><p class="text-sm text-ink-muted">Hover / raised.</p></div>
+        <div class="rounded-card bg-white p-6 shadow-glow"><p class="font-semibold">shadow-glow</p><p class="text-sm text-ink-muted">Selected / featured.</p></div>
+      </div>
+      <p class="mt-6 mb-3 text-ink-muted">Spacing: Tailwind's 4px base scale (1 = 0.25rem).</p>
+      <div class="flex flex-wrap items-end gap-4">
+        {[2, 4, 6, 8, 12, 16, 24].map((n) => (
+          <div class="text-center text-sm text-ink-muted">
+            <div class="bg-royal" style={`width: calc(var(--spacing) * ${n}); height: calc(var(--spacing) * ${n})`}></div>
+            {n}
+          </div>
+        ))}
+      </div>
+    </section>
+
+    <section class={section}>
+      <h2 class={label}>Icons (Lucide)</h2>
+      <ul class="flex flex-wrap gap-6 text-royal">
+        {Object.entries(icons).map(([name, Icon]) => (
+          <li class="flex flex-col items-center gap-2 text-sm">
+            <Icon size={28} stroke-width={2} aria-hidden="true" />
+            <span class="text-ink-muted">{name}</span>
+          </li>
+        ))}
+      </ul>
+    </section>
+
+    <section class={section}>
+      <h2 class={label}>Checkered pattern</h2>
+      <div class="space-y-6">
+        <Checkered />
+        <Checkered tone="yellow-ink" />
+        <Checkered size={20} rows={1} />
+      </div>
+    </section>
+
+    <section class={section}>
+      <h2 class={label}>Buttons</h2>
+      <div class="flex flex-wrap items-center gap-4">
+        <Button href={`tel:${contact.phones[0].tel}`} icon={Phone}>{t.nav.callNow}</Button>
+        <Button variant="secondary" icon={MessageCircle}>{t.hero.ctaWhatsApp}</Button>
+        <Button size="lg" icon={Phone}>{t.hero.ctaCall}</Button>
+        <Button variant="secondary">{t.plans.enquire}</Button>
+      </div>
+      <div class="mt-6 flex flex-wrap gap-4 rounded-card bg-royal-deep p-6" data-surface="dark">
+        <Button icon={Phone}>{t.nav.callNow}</Button>
+        <Button variant="outline" icon={MessageCircle}>{t.hero.ctaWhatsApp}</Button>
+      </div>
+    </section>
+
+    <section class={section}>
+      <h2 class={label}>Cards</h2>
+      <ul class="grid gap-6 md:grid-cols-3">
+        {plans.map((p, i) => (
+          <Card as="li" tone={i === 1 ? 'royal' : 'light'} highlighted={i === 1}>
+            {i === 1 && <Badge class="mb-4">{t.plans.mostPopular} [TBD]</Badge>}
+            <h3 class="text-h3">{t.plans.planTitle(p.years)}</h3>
+            <p class="mt-2 mb-6">{t.plans.dailyRent(p.dailyRent)}</p>
+            <Button variant={i === 1 ? 'primary' : 'secondary'}>{t.plans.enquire}</Button>
+          </Card>
+        ))}
+      </ul>
+      <p class="mt-4 text-sm text-ink-muted">Tones: light, royal, deep. The highlighted state adds the yellow glow ring.</p>
+      <Card tone="deep" class="mt-6">
+        <p class="text-h3 font-display text-taxi">{t.brand.closing}</p>
+      </Card>
+    </section>
+
+    <section class={section}>
+      <h2 class={label}>Badges</h2>
+      <div class="flex flex-wrap items-center gap-3">
+        {t.attach.platforms.map((p) => <Badge>{p}</Badge>)}
+        <Badge tone="royal">{t.plans.mostPopular}</Badge>
+      </div>
+      <div class="mt-6 flex flex-wrap gap-3 rounded-card bg-royal p-6" data-surface="dark">
+        {t.attach.platforms.map((p) => <Badge tone="outline">{p}</Badge>)}
+      </div>
+    </section>
+  </main>
+
+  <Checkered tone="yellow-ink" />
+</Base>

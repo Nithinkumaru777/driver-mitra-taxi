@@ -1,0 +1,41 @@
+---
+import type { HTMLAttributes } from 'astro/types';
+
+// Renders <a> when href is given, otherwise <button>. Text comes from the slot.
+type Props = HTMLAttributes<'a'> & {
+  variant?: 'primary' | 'secondary' | 'outline';
+  size?: 'md' | 'lg';
+  /** A Lucide icon component, e.g. Phone from '@lucide/astro'. */
+  icon?: any;
+  type?: 'button' | 'submit';
+};
+
+const { variant = 'primary', size = 'md', icon: Icon, href, type = 'button', class: className, ...rest } = Astro.props;
+const Tag = href ? 'a' : 'button';
+
+const variants = {
+  primary: 'bg-taxi text-ink hover:shadow-glow',
+  secondary: 'bg-royal text-white hover:bg-royal-deep',
+  outline: 'border-2 border-current text-white hover:bg-white hover:text-royal-deep',
+};
+const sizes = {
+  md: 'min-h-12 px-5 text-lg gap-2',
+  lg: 'min-h-14 px-7 text-xl gap-2.5',
+};
+---
+
+<Tag
+  href={href}
+  type={href ? undefined : type}
+  class:list={[
+    'inline-flex items-center justify-center rounded-plate font-display uppercase tracking-wide',
+    'transition-[transform,box-shadow,background-color,color] duration-150 active:translate-y-px active:scale-[0.98]',
+    variants[variant],
+    sizes[size],
+    className,
+  ]}
+  {...rest}
+>
+  {Icon && <Icon size={size === 'lg' ? 24 : 20} stroke-width={2.25} aria-hidden="true" />}
+  <slot />
+</Tag>

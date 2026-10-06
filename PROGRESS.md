@@ -5,7 +5,7 @@
 | Phase | Status | Notes |
 |---|---|---|
 | 0. Setup & skill discovery | ✅ Done (awaiting review) | Astro scaffolded, Tailwind wired, dev server runs, git initialised |
-| 1. Design system & content | ⏳ Not started | |
+| 1. Design system & content | ✅ Done (awaiting review) | Tokens, fonts, Lucide, Checkered/Button/Card/Badge, `src/content/site.ts`, `/styleguide` |
 | 2. All sections (static) | ⏳ Not started | |
 | 3. 3D car viewer | ⏳ Not started | |
 | 4. Driver gallery | ⏳ Not started | |
@@ -105,6 +105,15 @@ Format: skill → phase(s) used, or "not relevant".
 - Connected: context7, 21st, browser-use, claude.ai Docs, lean-ctx
 - Failed to connect: playwright, chrome-devtools, magic, github, supabase (timeouts) — retry before Phase 3/7
 - Needs auth: sentry, vercel
+
+### Design system (Phase 1)
+- **Colors** (`src/styles/global.css` `@theme`, Tailwind default palette disabled via `--color-*: initial`): royal `#0B3D91`, royal-deep `#072A66`, royal-tint `#E7EEFA`, taxi `#FFD400`, white, ink `#121826`, ink-muted `#4B5568`, mist `#C8D5EE` (muted text on blue).
+- **Contrast:** 15 allowed text/background pairs, all ≥ 4.5:1 (lowest: ink-muted on royal-tint 6.43). `/styleguide` parses `global.css` and **throws at build** if any pair falls below AA. Taxi yellow on white (1.43:1) is never used for text.
+- **Fonts:** Anton (display, uppercase) + Inter variable 400–700 via Astro's built-in Fonts API (fontsource provider): self-hosted, preloaded, `font-display: swap`, metric-matched fallbacks. No font npm packages. Hindi/Kannada will need Noto Sans Devanagari/Kannada when those locales land.
+- **Icons:** `@lucide/astro` (tree-shaken per icon). Lucide has no brand icons, so WhatsApp uses `MessageCircle` (no logos, per §11).
+- **Signature details:** badges styled as Indian commercial yellow number plates; `rounded-plate` 6px for buttons/badges vs `rounded-card` 1rem for containers; blue-tinted shadows; yellow focus ring on `data-surface="dark"`, royal on light.
+- **Content:** `src/content/site.ts` — locale-independent data (phones, plans, `mostPopularPlan` flag, gallery) + `en` copy object typed as `Copy`; `hi`/`kn` must satisfy the same type. Strings that vary by word order are functions.
+- `reference/pamphlet.jpg` still missing — Phase 1 used BRIEF §4 hex codes/descriptions instead.
 
 ## Open issues
 - `reference/pamphlet.jpg` is **missing** from the project. Needed in Phase 1 for brand color/energy reference.

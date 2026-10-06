@@ -1,0 +1,25 @@
+---
+// "plate" mimics an Indian commercial (yellow) number plate.
+interface Props {
+  tone?: 'plate' | 'royal' | 'outline';
+  class?: string;
+}
+
+const { tone = 'plate', class: className } = Astro.props;
+
+const tones = {
+  plate: 'bg-taxi text-ink border-2 border-ink',
+  royal: 'bg-royal-tint text-royal',
+  outline: 'border-2 border-current text-white',
+};
+---
+
+<span
+  class:list={[
+    'inline-flex items-center gap-1.5 rounded-plate px-2.5 py-1 font-display text-base uppercase leading-none tracking-wider',
+    tones[tone],
+    className,
+  ]}
+>
+  <slot />
+</span>

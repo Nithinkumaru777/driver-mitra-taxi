@@ -1,0 +1,27 @@
+---
+// Decorative taxi checker strip. Use sparingly: dividers, section edges, wipes.
+interface Props {
+  tone?: 'yellow-royal' | 'yellow-ink';
+  /** Square size in px. */
+  size?: number;
+  rows?: number;
+  class?: string;
+}
+
+const { tone = 'yellow-royal', size = 12, rows = 2, class: className } = Astro.props;
+const second = tone === 'yellow-ink' ? 'var(--color-ink)' : 'var(--color-royal)';
+---
+
+<div
+  aria-hidden="true"
+  class:list={['checkered w-full', className]}
+  style={`--sq:${size}px; --rows:${rows}; --b:${second}`}
+>
+</div>
+
+<style>
+  .checkered {
+    height: calc(var(--sq) * var(--rows));
+    background: repeating-conic-gradient(var(--color-taxi) 0 25%, var(--b) 0 50%) 0 0 / calc(var(--sq) * 2) calc(var(--sq) * 2);
+  }
+</style>

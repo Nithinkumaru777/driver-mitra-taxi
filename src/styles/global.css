@@ -1,1 +1,71 @@
 @import "tailwindcss";
+
+/* Brand tokens. Hex values here are the single source of truth:
+   /styleguide parses this file and fails the build if a listed pair drops below WCAG AA. */
+@theme {
+  /* Only brand colors exist — no stray Tailwind palette. */
+  --color-*: initial;
+  --color-royal: #0B3D91;
+  --color-royal-deep: #072A66;
+  --color-royal-tint: #E7EEFA;
+  --color-taxi: #FFD400;
+  --color-white: #FFFFFF;
+  --color-ink: #121826;
+  --color-ink-muted: #4B5568;
+  --color-mist: #C8D5EE;
+
+  /* Fluid display scale (Anton is condensed, so it runs large). */
+  --text-display: clamp(2.75rem, 1.5rem + 6vw, 6.5rem);
+  --text-display--line-height: 0.92;
+  --text-h1: clamp(2.25rem, 1.4rem + 4vw, 4.25rem);
+  --text-h1--line-height: 0.95;
+  --text-h2: clamp(1.875rem, 1.3rem + 2.4vw, 3rem);
+  --text-h2--line-height: 1;
+  --text-h3: clamp(1.375rem, 1.15rem + 1vw, 1.75rem);
+  --text-h3--line-height: 1.1;
+
+  /* Plate = number-plate corners (buttons, badges); card = containers. */
+  --radius-plate: 6px;
+  --radius-card: 1rem;
+
+  /* Blue-tinted, not grey, so shadows sit in the brand. */
+  --shadow-card: 0 1px 0 rgb(7 42 102 / 0.06), 0 14px 32px -14px rgb(7 42 102 / 0.35);
+  --shadow-lift: 0 2px 0 rgb(7 42 102 / 0.08), 0 24px 48px -18px rgb(7 42 102 / 0.45);
+  --shadow-glow: 0 0 0 3px var(--color-taxi), 0 0 28px rgb(255 212 0 / 0.45);
+}
+
+@theme inline {
+  --font-display: var(--font-anton);
+  --font-sans: var(--font-inter);
+}
+
+@layer base {
+  body {
+    @apply bg-white font-sans text-ink antialiased;
+  }
+
+  h1, h2, h3 {
+    font-family: var(--font-display);
+    text-transform: uppercase;
+    letter-spacing: 0.01em;
+    text-wrap: balance;
+  }
+
+  /* Royal ring on light surfaces, yellow on dark ones. */
+  :focus-visible {
+    outline: 3px solid var(--focus-ring, var(--color-royal));
+    outline-offset: 3px;
+  }
+  [data-surface="dark"] {
+    --focus-ring: var(--color-taxi);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

@@ -1,0 +1,24 @@
+---
+interface Props {
+  tone?: 'light' | 'royal' | 'deep';
+  /** Yellow glow ring, e.g. a selected or featured plan. */
+  highlighted?: boolean;
+  as?: 'div' | 'article' | 'li';
+  class?: string;
+}
+
+const { tone = 'light', highlighted = false, as: Tag = 'div', class: className } = Astro.props;
+
+const tones = {
+  light: 'bg-white text-ink border border-royal-tint shadow-card',
+  royal: 'bg-royal text-white shadow-lift',
+  deep: 'bg-royal-deep text-white shadow-lift',
+};
+---
+
+<Tag
+  data-surface={tone === 'light' ? undefined : 'dark'}
+  class:list={['rounded-card p-6', tones[tone], highlighted && 'shadow-glow', className]}
+>
+  <slot />
+</Tag>
