@@ -10,7 +10,7 @@ const t = getCopy();
   <div class="container-page">
     <h2 class="text-h2">{t.car.heading}</h2>
     <div class="mt-10 grid gap-10 lg:grid-cols-[1.6fr_1fr] lg:items-center">
-      <CarStage class="aspect-[16/11] w-full" />
+      <CarStage class="aspect-[16/11] w-full" orbit={[90, 180]} />
       <div>
         <h3 class="text-h3 text-taxi">{t.car.specsHeading}</h3>
         <dl class="mt-4 divide-y divide-white/15 border-y border-white/15">

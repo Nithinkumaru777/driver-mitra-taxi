@@ -78,6 +78,88 @@
   }
 }
 
+/* ---------- Motion (BRIEF §7): transform + opacity only. Tier in html[data-motion], set in Base.astro. ---------- */
+
+/* Page load: checkered wipe uncovers the hero, headline words rise in, ₹10,000 lands like a stamp. All done by ~0.9s. */
+.hero-wipe {
+  animation: hero-wipe 600ms cubic-bezier(0.7, 0, 0.2, 1) both;
+}
+.hero-wipe::before {
+  content: "";
+  position: absolute;
+  inset-block: 0;
+  left: 0;
+  width: 48px;
+  background: repeating-conic-gradient(var(--color-taxi) 0 25%, var(--color-ink) 0 50%) 0 0 / 24px 24px;
+}
+.hero-word {
+  display: inline-block;
+  animation: hero-word 380ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
+  animation-delay: calc(180ms + var(--i) * 55ms);
+}
+.hero-stamp {
+  animation-name: hero-stamp;
+  animation-duration: 420ms;
+}
+@keyframes hero-wipe {
+  to { transform: translateX(100%); }
+}
+@keyframes hero-word {
+  from { opacity: 0; transform: translateY(0.35em); }
+}
+@keyframes hero-stamp {
+  0% { opacity: 0; transform: scale(1.8); }
+  60% { opacity: 1; transform: scale(0.94); }
+  100% { transform: scale(1); }
+}
+
+/* Hero car: gentle float (full tier only). */
+[data-motion="full"] .hero-float {
+  animation: float 6s ease-in-out infinite;
+}
+@keyframes float {
+  50% { transform: translateY(-10px); }
+}
+
+/* Attach Anywhere: two identical halves, shift by one half for a seamless loop. */
+.marquee-track {
+  animation: marquee 40s linear infinite;
+}
+@keyframes marquee {
+  to { transform: translateX(-50%); }
+}
+
+/* Call buttons: a ring pulses every 4s until the visitor first taps or types. */
+[data-pulse] {
+  position: relative;
+}
+[data-pulse]::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border: 2px solid var(--color-taxi);
+  border-radius: inherit;
+  opacity: 0;
+  pointer-events: none;
+  animation: call-pulse 4s ease-out 1.5s infinite;
+}
+[data-interacted] [data-pulse]::after {
+  animation: none;
+}
+@keyframes call-pulse {
+  0% { opacity: 0.9; transform: scale(1); }
+  35%, 100% { opacity: 0; transform: scale(1.08, 1.45); }
+}
+
+[data-motion="reduced"] :is(.hero-wipe, .hero-word, .hero-stamp, .marquee-track),
+[data-motion="reduced"] [data-pulse]::after {
+  /* (pseudo-elements can't go inside :is()) */
+  animation: none;
+}
+[data-motion="reduced"] .hero-wipe {
+  display: none;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     animation-duration: 0.01ms !important;

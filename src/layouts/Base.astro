@@ -22,8 +22,43 @@ const { title, description, lang = 'en' } = Astro.props;
     <meta name="description" content={description} />
     <Font cssVariable="--font-anton" preload />
     <Font cssVariable="--font-inter" preload />
+    <script is:inline>
+      // Motion tier for CSS ([data-motion]) and src/scripts/motion.ts, set before first paint.
+      // ?motion=full|lite|reduced forces a tier for QA.
+      (function () {
+        var n = navigator;
+        var forced = new URLSearchParams(location.search).get('motion');
+        document.documentElement.dataset.motion = /^(full|lite|reduced)$/.test(forced)
+          ? forced
+          : matchMedia('(prefers-reduced-motion: reduce)').matches
+            ? 'reduced'
+            : n.hardwareConcurrency <= 4 || (n.connection && n.connection.saveData)
+              ? 'lite'
+              : 'full';
+      })();
+    </script>
   </head>
   <body>
     <slot />
   </body>
 </html>
+
+<script>
+  // GSAP ScrollTrigger and Lenis are registered together here so smooth scroll and scroll triggers share one clock.
+  import Lenis from 'lenis';
+  import 'lenis/dist/lenis.css';
+  import { gsap, ScrollTrigger, tier } from '../scripts/motion';
+
+  // The Call button pulse ([data-pulse] in global.css) stops once the visitor first taps, clicks or types.
+  const interacted = () => document.documentElement.setAttribute('data-interacted', '');
+  addEventListener('pointerdown', interacted, { once: true });
+  addEventListener('keydown', interacted, { once: true });
+
+  if (tier === 'full') {
+    // Touch keeps native scrolling (Lenis default). Anchor links stay native (CSS smooth + scroll-padding + focus).
+    const lenis = new Lenis({ prevent: (node) => !!node.closest('dialog, [popover]') });
+    lenis.on('scroll', ScrollTrigger.update);
+    gsap.ticker.add((time) => lenis.raf(time * 1000));
+    gsap.ticker.lagSmoothing(0);
+  }
+</script>

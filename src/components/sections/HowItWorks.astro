@@ -9,13 +9,13 @@ const t = getCopy();
     <h2 class="text-h2 text-royal">{t.howItWorks.heading}</h2>
     <ol class="relative mt-10 grid gap-8 lg:mt-14 lg:grid-cols-4 lg:gap-6">
       <!-- The road: vertical on mobile, horizontal on desktop. Steps sit on it. -->
-      <div aria-hidden="true" class="road absolute bottom-0 left-0 top-0 w-12 rounded-plate lg:bottom-auto lg:right-0 lg:h-12 lg:w-auto"></div>
+      <div aria-hidden="true" class="road absolute bottom-0 left-0 top-0 w-12 overflow-hidden rounded-plate lg:bottom-auto lg:right-0 lg:h-12 lg:w-auto"></div>
       {t.howItWorks.steps.map((step, i) => (
-        <li class="relative grid grid-cols-[3rem_1fr] items-center gap-5 lg:grid-cols-1 lg:items-start">
-          <span class="grid size-12 place-items-center rounded-plate border-2 border-ink bg-taxi font-display text-2xl text-ink lg:ml-4">
+        <li data-step class="relative grid grid-cols-[3rem_1fr] items-center gap-5 lg:grid-cols-1 lg:items-start">
+          <span data-plate class="grid size-12 place-items-center rounded-plate border-2 border-ink bg-taxi font-display text-2xl text-ink lg:ml-4">
             {i + 1}
           </span>
-          <p class="text-h3 font-display uppercase text-ink">{step}</p>
+          <p data-text class="text-h3 font-display uppercase text-ink">{step}</p>
         </li>
       ))}
     </ol>
@@ -23,17 +23,55 @@ const t = getCopy();
 </section>
 
 <style>
-  /* Asphalt with a dashed yellow centre line. */
+  /* Asphalt with a dashed yellow centre line. The line is a pseudo-element moved by transform, so it "drives" for free. */
   .road {
-    background:
-      repeating-linear-gradient(to bottom, var(--color-taxi) 0 14px, transparent 14px 28px) center / 3px 100% no-repeat,
-      var(--color-ink);
+    background: var(--color-ink);
+  }
+  .road::before {
+    content: "";
+    position: absolute;
+    left: calc(50% - 1.5px);
+    top: -28px;
+    bottom: 0;
+    width: 3px;
+    background: repeating-linear-gradient(to bottom, var(--color-taxi) 0 14px, transparent 14px 28px);
+    animation: road-y 0.8s linear infinite;
+  }
+  @keyframes road-y {
+    to { transform: translateY(28px); }
   }
   @media (width >= 64rem) {
-    .road {
-      background:
-        repeating-linear-gradient(to right, var(--color-taxi) 0 14px, transparent 14px 28px) center / 100% 3px no-repeat,
-        var(--color-ink);
+    .road::before {
+      inset: calc(50% - 1.5px) 0 auto -28px;
+      width: auto;
+      height: 3px;
+      background: repeating-linear-gradient(to right, var(--color-taxi) 0 14px, transparent 14px 28px);
+      animation-name: road-x;
     }
   }
+  @keyframes road-x {
+    to { transform: translateX(28px); }
+  }
+  :global([data-motion="reduced"]) .road::before {
+    animation: none;
+  }
 </style>
+
+<script>
+  // Each step "lights up" as it reaches the lower part of the viewport.
+  import { gsap, tier, onceVisible } from '../../scripts/motion';
+
+  if (tier !== 'reduced') {
+    const steps = [...document.querySelectorAll<HTMLElement>('[data-step]')];
+    const lightUp = new Map(
+      steps.map((step) => [
+        step,
+        gsap
+          .timeline({ paused: true })
+          .from(step.querySelector('[data-plate]'), { opacity: 0.25, scale: 0.6, duration: 0.45, ease: 'back.out(2.5)' })
+          .from(step.querySelector('[data-text]'), { opacity: 0, x: tier === 'full' ? -16 : 0, duration: 0.4, ease: 'power2.out' }, '<0.1'),
+      ]),
+    );
+    onceVisible(steps, (els) => els.forEach((el, i) => lightUp.get(el as HTMLElement)!.delay(i * 0.12).play()));
+  }
+</script>

@@ -9,14 +9,17 @@ interface Props {
   class?: string;
   /** Above-the-fold stage: load the poster eagerly. */
   eager?: boolean;
+  /** Scroll-linked turn in degrees, added to the camera angle as the stage scrolls through the viewport. */
+  orbit?: [from: number, to: number];
 }
 
-const { class: className, eager = false } = Astro.props;
+const { class: className, eager = false, orbit } = Astro.props;
 const t = getCopy();
 ---
 
 <div
   data-car-stage
+  data-orbit={orbit?.join(' ')}
   class:list={[
     'group relative isolate overflow-hidden rounded-card bg-linear-to-b from-royal-tint to-white',
     'after:absolute after:inset-x-0 after:bottom-0 after:-z-10 after:h-1/4 after:bg-royal-tint/60',
@@ -80,8 +83,9 @@ const t = getCopy();
 </div>
 
 <script>
+  import { ScrollTrigger, tier } from '../scripts/motion';
+
   const stages = [...document.querySelectorAll<HTMLElement>('[data-car-stage]')];
-  const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const fail = (stage: HTMLElement) => {
     stage.dataset.state = 'error';
     stage.querySelector('model-viewer')?.remove(); // poster stays as the fallback
@@ -96,7 +100,7 @@ const t = getCopy();
     for (const stage of stages) {
       const viewer = stage.querySelector('model-viewer')!;
       const bar = stage.querySelector<HTMLElement>('[data-progress]')!;
-      if (reducedMotion) viewer.removeAttribute('auto-rotate');
+      if (tier === 'reduced') viewer.removeAttribute('auto-rotate');
 
       viewer.addEventListener('progress', (e: Event) => {
         const p = (e as CustomEvent<{ totalProgress: number }>).detail.totalProgress;
@@ -120,5 +124,22 @@ const t = getCopy();
       { rootMargin: '300px' },
     );
     stages.forEach((s) => observer.observe(s));
+
+    // Scroll-linked orbit (full tier only): the camera turns while auto-rotate keeps spinning the model on top.
+    if (tier === 'full') {
+      for (const stage of stages) {
+        if (!stage.dataset.orbit) continue;
+        const [from, to] = stage.dataset.orbit.split(' ').map(Number);
+        const viewer = stage.querySelector('model-viewer')!;
+        const [theta, ...rest] = viewer.getAttribute('camera-orbit')!.split(' ');
+        ScrollTrigger.create({
+          trigger: stage,
+          start: 'clamp(top bottom)',
+          end: 'bottom top',
+          onUpdate: ({ progress }) =>
+            viewer.setAttribute('camera-orbit', `${parseFloat(theta) + from + (to - from) * progress}deg ${rest.join(' ')}`),
+        });
+      }
+    }
   }
 </script>

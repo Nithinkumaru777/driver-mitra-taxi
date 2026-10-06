@@ -5,18 +5,21 @@ import Badge from '../ui/Badge.astro';
 import { getCopy, plans, mostPopularPlan } from '../../content/site';
 
 const t = getCopy();
+// Yellow glow ring on the focused or selected card: a pseudo-element faded in (opacity only).
+const glow =
+  'after:pointer-events-none after:absolute after:inset-0 after:rounded-card after:opacity-0 after:shadow-glow after:transition-opacity focus-within:after:opacity-100 data-selected:after:opacity-100';
 ---
 
 <section id="plans" class="bg-white py-16 md:py-24">
   <div class="container-page">
     <h2 class="text-h2 text-royal">{t.plans.heading}</h2>
-    <ul class="mt-10 grid gap-6 md:grid-cols-3">
+    <ul data-plans class="mt-10 grid gap-6 md:grid-cols-3">
       {plans.map((plan) => {
         const popular = plan.years === mostPopularPlan;
         return (
-          <Card as="li" highlighted={popular} class="relative flex flex-col">
+          <Card as="li" highlighted={popular} class:list={['relative flex flex-col transition-[translate] duration-200 hover:-translate-y-1.5', glow]}>
             {popular && <Badge class="absolute -top-3 right-5">{t.plans.mostPopular}</Badge>}
-            <span aria-hidden="true" class="font-display text-[5.5rem] leading-none text-royal">{plan.years}</span>
+            <span aria-hidden="true" data-count class="font-display text-[5.5rem] leading-none text-royal">{plan.years}</span>
             <h3 class="mt-2 text-h3">{t.plans.planTitle(plan.years)}</h3>
             <p class="mb-6 mt-3 text-lg text-ink-muted">{t.plans.dailyRent(plan.dailyRent)}</p>
             <Button href="#enquire" variant="secondary" data-plan={plan.years} class="mt-auto w-full">
@@ -28,3 +31,35 @@ const t = getCopy();
     </ul>
   </div>
 </section>
+
+<script>
+  import { gsap, tier, countUp } from '../../scripts/motion';
+
+  const cards = [...document.querySelectorAll<HTMLElement>('[data-plans] > li')];
+  cards.forEach((card) => countUp(card.querySelector('[data-count]')!));
+
+  // Clicking Enquire marks that card as selected (Phase 6 also pre-selects the plan in the form).
+  document.querySelector('[data-plans]')!.addEventListener('click', (e) => {
+    const button = (e.target as Element).closest('[data-plan]');
+    if (button) cards.forEach((c) => c.toggleAttribute('data-selected', c.contains(button)));
+  });
+
+  // Subtle 3D tilt towards the cursor: desktop mouse only, full tier only. The lift is CSS (translate).
+  if (tier === 'full' && matchMedia('(hover: hover) and (pointer: fine)').matches) {
+    for (const card of cards) {
+      gsap.set(card, { transformPerspective: 900 });
+      const rotateX = gsap.quickTo(card, 'rotationX', { duration: 0.4, ease: 'power3' });
+      const rotateY = gsap.quickTo(card, 'rotationY', { duration: 0.4, ease: 'power3' });
+      let box: DOMRect;
+      card.addEventListener('pointerenter', () => (box = card.getBoundingClientRect()));
+      card.addEventListener('pointermove', (e) => {
+        rotateY(((e.clientX - box.left) / box.width - 0.5) * 8);
+        rotateX(((e.clientY - box.top) / box.height - 0.5) * -8);
+      });
+      card.addEventListener('pointerleave', () => {
+        rotateX(0);
+        rotateY(0);
+      });
+    }
+  }
+</script>

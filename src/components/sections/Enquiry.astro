@@ -7,6 +7,8 @@ import { getCopy, plans } from '../../content/site';
 const t = getCopy();
 const field = 'block min-h-12 w-full border-2 border-royal/60 bg-white px-4 text-base text-ink focus:border-royal';
 const label = 'font-semibold';
+// Focus animation: a bar under the field scales in from the left (transform only).
+const bar = 'pointer-events-none absolute inset-x-0 bottom-0 h-1 origin-left scale-x-0 rounded-b-plate bg-taxi transition-transform duration-200 peer-focus:scale-x-100';
 const choice = 'flex min-h-12 cursor-pointer items-center gap-3 rounded-plate border-2 border-royal/60 px-4 has-checked:border-royal has-checked:bg-royal-tint';
 ---
 
@@ -16,29 +18,38 @@ const choice = 'flex min-h-12 cursor-pointer items-center gap-3 rounded-plate bo
     <form id="enquiry-form" class="mt-8 grid max-w-3xl gap-6 rounded-card bg-white p-5 shadow-card md:grid-cols-2 md:p-8">
       <label class={label}>
         {t.form.name}
-        <input name="name" type="text" autocomplete="name" required class:list={[field, 'mt-2 rounded-plate']} />
+        <span class="relative mt-2 block">
+          <input name="name" type="text" autocomplete="name" required class:list={[field, 'peer rounded-plate']} />
+          <span aria-hidden="true" class={bar}></span>
+        </span>
       </label>
 
       <label class={label}>
         {t.form.mobile}
         <span class="mt-2 flex">
           <span class="grid place-items-center rounded-l-plate border-2 border-r-0 border-royal/60 bg-royal-tint px-3 text-ink-muted">+91</span>
-          <input
-            name="mobile"
-            type="tel"
-            inputmode="numeric"
-            autocomplete="tel-national"
-            pattern="[6-9][0-9]{9}"
-            maxlength="10"
-            required
-            class:list={[field, 'rounded-r-plate']}
-          />
+          <span class="relative block flex-1">
+            <input
+              name="mobile"
+              type="tel"
+              inputmode="numeric"
+              autocomplete="tel-national"
+              pattern="[6-9][0-9]{9}"
+              maxlength="10"
+              required
+              class:list={[field, 'peer rounded-r-plate']}
+            />
+            <span aria-hidden="true" class={bar}></span>
+          </span>
         </span>
       </label>
 
       <label class={label}>
         {t.form.city}
-        <input name="city" type="text" autocomplete="address-level2" required class:list={[field, 'mt-2 rounded-plate']} />
+        <span class="relative mt-2 block">
+          <input name="city" type="text" autocomplete="address-level2" required class:list={[field, 'peer rounded-plate']} />
+          <span aria-hidden="true" class={bar}></span>
+        </span>
       </label>
 
       <fieldset class="md:col-span-2">
@@ -67,7 +78,10 @@ const choice = 'flex min-h-12 cursor-pointer items-center gap-3 rounded-plate bo
 
       <label class:list={[label, 'md:col-span-2']}>
         {t.form.message} <span class="font-normal text-ink-muted">({t.form.optional})</span>
-        <textarea name="message" rows="3" class:list={[field, 'mt-2 rounded-plate py-3']}></textarea>
+        <span class="relative mt-2 block">
+          <textarea name="message" rows="3" class:list={[field, 'peer block rounded-plate py-3']}></textarea>
+          <span aria-hidden="true" class={bar}></span>
+        </span>
       </label>
 
       <Button type="submit" icon={MessageCircle} size="lg" class="w-full md:col-span-2">{t.form.submit}</Button>

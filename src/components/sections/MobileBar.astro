@@ -9,7 +9,7 @@ const t = getCopy();
 
 <div data-surface="dark" class="fixed inset-x-0 bottom-0 z-30 bg-royal-deep pl-4 pr-24 pb-[calc(0.5rem+env(safe-area-inset-bottom))] pt-2 shadow-lift md:hidden">
   <!-- Right padding leaves room for the WhatsApp button, which sits in the bar's footprint. -->
-  <Button href={`tel:${contact.phones[0].tel}`} icon={Phone} size="lg" class="w-full">{t.mobileBar.call}</Button>
+  <Button href={`tel:${contact.phones[0].tel}`} icon={Phone} size="lg" class="w-full" data-pulse>{t.mobileBar.call}</Button>
 </div>
 
 <a

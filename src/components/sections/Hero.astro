@@ -5,20 +5,25 @@ import CarStage from '../CarStage.astro';
 import { getCopy, contact, whatsappHref } from '../../content/site';
 
 const t = getCopy();
+// Headline split into words for the load animation (--i = stagger index). The amount is the stamped word.
+const lead = t.hero.headlineLead.split(' ');
+const trail = t.hero.headlineTrail.split(' ');
 ---
 
-<section id="top" data-surface="dark" class="bg-royal pb-14 pt-24 text-white md:pb-20 md:pt-32">
+<section id="top" data-surface="dark" class="relative overflow-hidden bg-royal pb-14 pt-24 text-white md:pb-20 md:pt-32">
+  <div aria-hidden="true" class="hero-wipe pointer-events-none absolute inset-0 z-10 bg-royal-deep"></div>
   <div class="container-page grid items-center gap-10 lg:grid-cols-[1.1fr_1fr] lg:gap-12">
     <div>
       <p class="font-semibold text-taxi">{t.brand.tagline}</p>
       <h1 class="mt-4 text-display">
-        {t.hero.headlineLead}
-        <span class="my-1 inline-block -rotate-2 rounded-plate border-4 border-ink bg-taxi px-3 pt-1 text-ink shadow-lift">{t.hero.amount}</span>
-        <br />{t.hero.headlineTrail}
+        {lead.map((w, i) => <><span class="hero-word" style={`--i:${i}`}>{w}</span>{' '}</>)}
+        <span class="hero-word hero-stamp my-1 -rotate-2 rounded-plate border-4 border-ink bg-taxi px-3 pt-1 text-ink shadow-lift" style={`--i:${lead.length}`}>{t.hero.amount}</span>
+        <br />
+        {trail.map((w, i) => <>{' '}<span class="hero-word" style={`--i:${lead.length + 1 + i}`}>{w}</span></>)}
       </h1>
       <p class="mt-6 max-w-md text-lg text-white md:text-xl">{t.hero.subline}</p>
       <div class="mt-8 flex flex-col gap-3 sm:flex-row">
-        <Button href={`tel:${contact.phones[0].tel}`} icon={Phone} size="lg">{t.hero.ctaCall}</Button>
+        <Button href={`tel:${contact.phones[0].tel}`} icon={Phone} size="lg" data-pulse>{t.hero.ctaCall}</Button>
         <Button href={whatsappHref(t.hero.whatsappText)} icon={MessageCircle} size="lg" variant="outline" target="_blank" rel="noopener">
           {t.hero.ctaWhatsApp}
         </Button>
@@ -29,6 +34,6 @@ const t = getCopy();
         ))}
       </p>
     </div>
-    <CarStage class="aspect-[4/3] w-full" eager />
+    <CarStage class="hero-float aspect-[4/3] w-full" eager orbit={[0, 90]} />
   </div>
 </section>

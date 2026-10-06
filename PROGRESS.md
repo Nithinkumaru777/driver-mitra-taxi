@@ -9,7 +9,7 @@
 | 2. All sections (static) | ✅ Done (awaiting review) | 12 sections in `src/components/sections/`; verified 360/768/1440 |
 | 3. 3D car viewer | ✅ Done (awaiting review) | `<model-viewer>` in both car stages; CC0 placeholder sedan (13 KB GLB) — `[TBD: replace with Dzire Tour S model]` |
 | 4. Driver gallery | ✅ Done (awaiting review) | `npm run drivers` (sharp → AVIF+WebP ×4 widths, EXIF/GPS stripped); grid + `<dialog>` lightbox; 4 neutral placeholders with `[TBD]` captions |
-| 5. Motion | ⏳ Not started | |
+| 5. Motion | ✅ Done (awaiting review) | All 8 §7 moments; 3 motion tiers; no jank at 4× CPU throttle (p95 frame 11 ms, 0 long tasks); success checkmark deferred to Phase 6 |
 | 6. Form, SEO, integrations | ⏳ Not started | |
 | 7. QA & polish | ⏳ Not started | |
 | 8. Handover | ⏳ Not started | |
@@ -19,7 +19,7 @@
 ### Stack (Phase 0) — as recommended by BRIEF §9, no deviation
 - **Astro 7** (static output) — zero JS by default; only islands we opt into ship JS. Best fit for slow 4G / low-end Android.
 - **Tailwind CSS v4** via `@tailwindcss/vite` — design tokens live as CSS variables in `src/styles/global.css` (`@theme`), no `tailwind.config.js` needed in v4.
-- **GSAP + ScrollTrigger + Lenis** — added in Phase 5 (not installed yet; no deps "for later").
+- **GSAP + ScrollTrigger + Lenis** — added in Phase 5.
 - **`@google/model-viewer`** — added in Phase 3, lazy-loaded.
 - **`sharp`** (Phase 4 image pipeline), **`@gltf-transform/cli`** (Phase 3 GLB compression) — added in their phases.
 - **Icons:** Lucide (decided now, installed in Phase 1).
@@ -151,6 +151,33 @@ Format: skill → phase(s) used, or "not relevant".
 - **Verified (Playwright):** 360 touch: tap opens, swipe left/right navigates, Esc closes. 1440 keyboard: Enter opens, focus lands on Close, arrows wrap, Esc returns focus to the card. Adding a photo plus one `gallery` entry showed a 5th card with the correct alt/caption/quote (test reverted). No horizontal scroll, no page errors, `astro check` and build clean.
 - **Deferred to Phase 5 (§7):** counter count-up, staggered reveal, hover zoom + caption slide-up, shared-element expand into the lightbox.
 
+### Motion (Phase 5)
+- **Skills:** no GSAP/Lenis/motion skill is installed (gap noted in Phase 0). Used Context7 (Lenis docs) and `frontend-design` craft guidance; checked GSAP/Lenis/model-viewer source where behaviour mattered.
+- **Deps:** `gsap` 3.15 (core + ScrollTrigger, ~44 KB gzip) and `lenis` 1.3 (~5 KB gzip). Both are deferred module scripts and never block render.
+- **Three tiers** in `html[data-motion]`, set by an inline `<head>` script before first paint (`Base.astro`):
+  - `reduced` = `prefers-reduced-motion`: no movement at all. No wipe, words, float, auto-rotate, orbit, tilt, marquee, pulse, reveals or view transition. Counters show final values.
+  - `lite` = `hardwareConcurrency <= 4` or Save-Data: CSS load moments, marquee, road dashes and reveals at smaller distances. No Lenis, float, tilt or scroll-linked 3D.
+  - `full` = everything.
+  - **QA override:** `?motion=full|lite|reduced`. DevTools CPU throttling doesn't change `hardwareConcurrency`, so throttled profiles still get `full` unless forced.
+- **Structure:** `src/scripts/motion.ts` registers ScrollTrigger and exports `tier`, `onceVisible()` and `countUp()`. Lenis is created in `Base.astro` next to the ScrollTrigger import (one clock: `gsap.ticker` drives `lenis.raf`). Each section keeps its own `<script>`, as in earlier phases.
+- **Load moments are pure CSS** (`global.css`): the checkered wipe (600 ms), the word-by-word headline and the ₹10,000 stamp. They run at first paint with no wait for JS, and the hero still shows if JS fails. Everything settles by **890 ms** (measured).
+- **Scroll-linked orbit:** `CarStage orbit={[from, to]}`. Hero 0→90° (side), Our Car 90→180° (rear), scrubbed across each stage's pass through the viewport. model-viewer's auto-rotate turns the **scene yaw**, not the camera, so the scroll-driven `camera-orbit` stacks on top of it without fighting. Full tier only.
+- **Lenis + anchors:** Lenis writes with `behavior: "instant"`, so CSS `scroll-behavior: smooth` stays for anchor links. Native fragment navigation keeps `scroll-padding-top` and the skip link's focus move, so Lenis's `anchors` option isn't used. Touch stays native (Lenis default). `prevent` skips `dialog` and `[popover]`.
+- **Gotchas found in testing:**
+  - (1) A ScrollTrigger with `once: true` **throws** in `refresh()` if the page loads already past its end, and a batch never fires `onEnter` if its whole range is jumped over. The symptom was a reload mid-page leaving the gallery at opacity 0. Fixed with `onceVisible()` (`end: 'max'`, one call per element), used for every reveal and counter.
+  - (2) Pseudo-elements can't go inside `:is()`.
+  - (3) Tailwind v4 `translate-*`/`scale-*` use the individual `translate`/`scale` properties, so `Button`'s `transition-[transform]` never animated its press state. Fixed. This is also why CSS hover lift and GSAP's tilt (`transform`) stack on plan cards.
+- **Lightbox expand** uses the native View Transitions API (grid photo ↔ lightbox photo, 350 ms). Without the API, or in reduced motion, it just opens and closes. Esc, backdrop tap and Close all animate.
+- **Call pulse** (hero, header, mobile bar): a `::after` ring every 4 s until the visitor's first tap, click or key press anywhere on the page.
+- **Counters:** `driversOnRoad` is `[TBD]`, so that counter stays static. It counts up automatically once it's a number. The screen-reader text is a separate `sr-only` copy, so readers never hear "0+".
+- **Verified (Playwright, built site):**
+  - All moments at 1440. Reload mid-page and deep link `#contact` leave nothing hidden.
+  - 360 mobile with touch, 4× CPU and slow 4G: FCP 1.0 s; scrolling the whole page gave p95 frame 11 ms, 0 frames > 50 ms, 0 long tasks.
+  - Reduced: zero CSS animations, no Lenis, auto-rotate off, lightbox works.
+  - Lite: no Lenis, float, tilt or orbit.
+  - No horizontal scroll; no page errors; `astro check` and build clean.
+- **Deferred:** the success checkmark animation belongs to the form success state, which Phase 6 builds.
+
 ## Open issues
 - `reference/pamphlet.jpg` is **missing** from the project. Needed in Phase 1 for brand color/energy reference.
 - **`[TBD: replace with Dzire Tour S model]`** — `public/models/dzire-tour-s.glb` not provided. The site uses a CC0 low-poly white sedan placeholder (`public/models/placeholder-sedan.glb`, 13 KB) and a poster rendered from it. Needed from client: a white Dzire Tour S GLB (or approval to buy a licensed one). Swap steps under "3D car viewer (Phase 3)".
@@ -158,4 +185,5 @@ Format: skill → phase(s) used, or "not relevant".
 - All BRIEF §10 items remain `[TBD]`.
 - **Driver photos + consent `[TBD]`**: the gallery shows 4 neutral placeholders. `driversOnRoad` count `[TBD]`. Alt text pattern says "his" (BRIEF §8). Make it gender-aware if any driver is not male.
 - **WhatsApp number `[TBD]`**: is 8296611117 or 9060772111 on WhatsApp? Until confirmed, WhatsApp buttons open WhatsApp without a pre-set recipient.
+- model-viewer 4.3.1 ships debug `console.log`s (`[$updateSource] called!`, `IntersectionObserver fired!`). Logs, not errors; check against Phase 7's "zero console errors" and pin or patch if needed.
 - `₹` glyph is not in Anton's latin subset; it renders from the fallback font (looks fine on Windows/Android). Revisit in Phase 7 if it looks off.

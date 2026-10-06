@@ -1,11 +1,13 @@
 ---
-// Text only: never Ola/Uber logos (BRIEF §11). Phase 5 adds the marquee.
+// Text only: never Ola/Uber logos (BRIEF §11).
 import { getCopy } from '../../content/site';
 
 const t = getCopy();
+// One half of the marquee: the phrase repeated so each half is wider than a 1440px screen.
+const half = Array.from({ length: 3 }, () => t.attach.marquee).flat();
 ---
 
-<section aria-labelledby="attach-heading" class="bg-taxi py-12 text-ink md:py-16">
+<section aria-labelledby="attach-heading" class="overflow-hidden bg-taxi pt-12 text-ink md:pt-16">
   <div class="container-page flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
     <h2 id="attach-heading" class="text-h2">{t.attach.heading}</h2>
     <ul class="flex flex-wrap gap-3">
@@ -13,5 +15,15 @@ const t = getCopy();
         <li class="rounded-plate border-2 border-ink px-5 py-2 font-display text-h3 uppercase">{p}</li>
       ))}
     </ul>
+  </div>
+  <!-- Decorative (the list above says the same), so hidden from screen readers. -->
+  <div aria-hidden="true" class="mt-10 border-y-2 border-ink py-3 md:mt-12">
+    <div class="marquee-track flex w-max">
+      {[0, 1].map(() => (
+        <p class="flex shrink-0 font-display text-h3 uppercase whitespace-nowrap">
+          {half.map((word) => <span class="px-4">{word} •</span>)}
+        </p>
+      ))}
+    </div>
   </div>
 </section>

@@ -17,6 +17,8 @@ const srcset = (image: string, format: string) =>
   driverPhotoWidths.map((w) => `/drivers/${image}-${w}.${format} ${w}w`).join(', ');
 // 2 columns on mobile, 4 from md; the container caps at 72rem.
 const sizes = '(min-width: 1152px) 270px, (min-width: 768px) 23vw, 46vw';
+// Counter split around the number so only the number counts up, whatever the word order of the locale.
+const [counterPre, counterPost] = t.drivers.counter('{n}').split('{n}');
 ---
 
 <section id="our-drivers" class="bg-royal-tint py-16 md:py-24">
@@ -26,13 +28,16 @@ const sizes = '(min-width: 1152px) 270px, (min-width: 768px) 23vw, 46vw';
         <h2 class="text-h2 text-royal">{t.drivers.heading}</h2>
         <p class="mt-3 max-w-xl text-lg text-ink-muted">{t.drivers.subline}</p>
       </div>
-      <Badge class="self-start px-4 py-2 text-xl md:shrink-0 md:self-auto">{t.drivers.counter(driversOnRoad)}</Badge>
+      <Badge class="self-start px-4 py-2 text-xl md:shrink-0 md:self-auto">
+        <span class="sr-only">{t.drivers.counter(driversOnRoad)}</span>
+        <span aria-hidden="true">{counterPre}<span data-count>{driversOnRoad}</span>{counterPost}</span>
+      </Badge>
     </div>
     <ul data-gallery class="mt-10 grid grid-cols-2 gap-4 md:grid-cols-4 md:gap-6">
       {gallery.map((d, i) => (
         <li>
           <figure>
-            <button type="button" data-index={i} aria-haspopup="dialog" class="block w-full overflow-hidden rounded-card">
+            <button type="button" data-index={i} aria-haspopup="dialog" class="group relative block w-full overflow-hidden rounded-card">
               <picture>
                 <source type="image/avif" srcset={srcset(d.image, 'avif')} sizes={sizes} />
                 <source type="image/webp" srcset={srcset(d.image, 'webp')} sizes={sizes} />
@@ -43,9 +48,12 @@ const sizes = '(min-width: 1152px) 270px, (min-width: 768px) 23vw, 46vw';
                   height="800"
                   loading="lazy"
                   decoding="async"
-                  class="aspect-[4/5] w-full object-cover"
+                  class="aspect-[4/5] w-full object-cover transition-transform duration-500 ease-out group-hover:scale-105"
                 />
               </picture>
+              <span aria-hidden="true" class="absolute inset-x-0 bottom-0 translate-y-full bg-royal-deep/90 px-3 py-2 text-left text-sm font-semibold text-white transition-transform duration-300 ease-out group-hover:translate-y-0 group-focus-visible:translate-y-0">
+                {d.name}, {d.city}
+              </span>
             </button>
             <figcaption class="mt-3">
               <p class="font-semibold">{d.name}, {d.city}</p>
@@ -92,10 +100,16 @@ const sizes = '(min-width: 1152px) 270px, (min-width: 768px) 23vw, 46vw';
   :global(html:has([data-lightbox][open])) {
     overflow: hidden;
   }
+  :global(::view-transition-group(driver-photo)) {
+    animation-duration: 350ms;
+    animation-timing-function: cubic-bezier(0.2, 0.7, 0.2, 1);
+  }
 </style>
 
 <script>
   // Native <dialog>: focus trap, Esc to close and focus return come for free.
+  import { gsap, tier, countUp, onceVisible } from '../../scripts/motion';
+
   const dialog = document.querySelector<HTMLDialogElement>('[data-lightbox]')!;
   const stage = dialog.querySelector<HTMLElement>('[data-stage]')!;
   const caption = dialog.querySelector<HTMLElement>('[data-caption]')!;
@@ -115,19 +129,54 @@ const sizes = '(min-width: 1152px) 270px, (min-width: 768px) 23vw, 46vw';
     caption.replaceChildren(...figures[index].querySelector('figcaption')!.cloneNode(true).childNodes);
   };
 
+  // Shared-element expand: the View Transitions API morphs the grid photo into the lightbox photo and back.
+  // Browsers without it (or reduced motion) just open and close.
+  const PHOTO = 'driver-photo';
+  const thumb = (i: number) => figures[i].querySelector('img')!;
+  const stageImg = () => stage.querySelector('img')!;
+  const morph = async (update: () => unknown) => {
+    if (!document.startViewTransition || tier === 'reduced') return void (await update());
+    await document.startViewTransition(update).finished;
+  };
+
+  const open = (i: number) => {
+    thumb(i).style.viewTransitionName = PHOTO;
+    morph(async () => {
+      thumb(i).style.viewTransitionName = '';
+      show(i);
+      dialog.showModal();
+      stageImg().style.viewTransitionName = PHOTO;
+      // Wait (briefly) for the bigger srcset candidate so the morph doesn't land on an empty frame.
+      await Promise.race([stageImg().decode().catch(() => {}), new Promise((r) => setTimeout(r, 250))]);
+    });
+  };
+  const close = async () => {
+    const back = thumb(index);
+    stageImg().style.viewTransitionName = PHOTO;
+    await morph(() => {
+      stageImg().style.viewTransitionName = '';
+      dialog.close();
+      back.style.viewTransitionName = PHOTO;
+    });
+    back.style.viewTransitionName = '';
+  };
+
   document.querySelector('[data-gallery]')!.addEventListener('click', (e) => {
     const button = (e.target as Element).closest<HTMLElement>('[data-index]');
-    if (!button) return;
-    show(Number(button.dataset.index));
-    dialog.showModal();
+    if (button) open(Number(button.dataset.index));
   });
 
   dialog.querySelector('[data-prev]')!.addEventListener('click', () => show(index - 1));
   dialog.querySelector('[data-next]')!.addEventListener('click', () => show(index + 1));
-  dialog.querySelector('[data-close]')!.addEventListener('click', () => dialog.close());
+  dialog.querySelector('[data-close]')!.addEventListener('click', close);
   // Tap on the empty area around the photo closes it.
   dialog.addEventListener('click', (e) => {
-    if (e.target === dialog || e.target === stage) dialog.close();
+    if (e.target === dialog || e.target === stage) close();
+  });
+  // Esc: animate the close too.
+  dialog.addEventListener('cancel', (e) => {
+    e.preventDefault();
+    close();
   });
   dialog.addEventListener('keydown', (e) => {
     if (e.key === 'ArrowLeft') show(index - 1);
@@ -146,4 +195,12 @@ const sizes = '(min-width: 1152px) 270px, (min-width: 768px) 23vw, 46vw';
     if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy)) show(index + (dx < 0 ? 1 : -1));
     x0 = NaN;
   });
+
+  // Counter + staggered reveal of the grid.
+  countUp(document.querySelector<HTMLElement>('#our-drivers [data-count]')!);
+  if (tier !== 'reduced') {
+    const items = document.querySelectorAll('[data-gallery] > li');
+    gsap.set(items, { opacity: 0, y: tier === 'full' ? 28 : 8 });
+    onceVisible(items, (batch) => gsap.to(batch, { opacity: 1, y: 0, duration: 0.5, stagger: 0.08, ease: 'power2.out' }));
+  }
 </script>
