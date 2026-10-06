@@ -1,0 +1,34 @@
+---
+import { Phone, MessageCircle } from '@lucide/astro';
+import Button from '../ui/Button.astro';
+import CarStage from '../CarStage.astro';
+import { getCopy, contact, whatsappHref } from '../../content/site';
+
+const t = getCopy();
+---
+
+<section id="top" data-surface="dark" class="bg-royal pb-14 pt-24 text-white md:pb-20 md:pt-32">
+  <div class="container-page grid items-center gap-10 lg:grid-cols-[1.1fr_1fr] lg:gap-12">
+    <div>
+      <p class="font-semibold text-taxi">{t.brand.tagline}</p>
+      <h1 class="mt-4 text-display">
+        {t.hero.headlineLead}
+        <span class="my-1 inline-block -rotate-2 rounded-plate border-4 border-ink bg-taxi px-3 pt-1 text-ink shadow-lift">{t.hero.amount}</span>
+        <br />{t.hero.headlineTrail}
+      </h1>
+      <p class="mt-6 max-w-md text-lg text-white md:text-xl">{t.hero.subline}</p>
+      <div class="mt-8 flex flex-col gap-3 sm:flex-row">
+        <Button href={`tel:${contact.phones[0].tel}`} icon={Phone} size="lg">{t.hero.ctaCall}</Button>
+        <Button href={whatsappHref(t.hero.whatsappText)} icon={MessageCircle} size="lg" variant="outline" target="_blank" rel="noopener">
+          {t.hero.ctaWhatsApp}
+        </Button>
+      </div>
+      <p class="mt-5 flex flex-wrap gap-x-5 gap-y-1 text-mist">
+        {contact.phones.map((p) => (
+          <a href={`tel:${p.tel}`} class="font-semibold underline-offset-4 hover:text-white hover:underline">{p.display}</a>
+        ))}
+      </p>
+    </div>
+    <CarStage class="aspect-[4/3] w-full" />
+  </div>
+</section>

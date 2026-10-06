@@ -6,7 +6,7 @@
 |---|---|---|
 | 0. Setup & skill discovery | ✅ Done (awaiting review) | Astro scaffolded, Tailwind wired, dev server runs, git initialised |
 | 1. Design system & content | ✅ Done (awaiting review) | Tokens, fonts, Lucide, Checkered/Button/Card/Badge, `src/content/site.ts`, `/styleguide` |
-| 2. All sections (static) | ⏳ Not started | |
+| 2. All sections (static) | ✅ Done (awaiting review) | 12 sections in `src/components/sections/`; verified 360/768/1440 |
 | 3. 3D car viewer | ⏳ Not started | |
 | 4. Driver gallery | ⏳ Not started | |
 | 5. Motion | ⏳ Not started | |
@@ -115,7 +115,20 @@ Format: skill → phase(s) used, or "not relevant".
 - **Content:** `src/content/site.ts` — locale-independent data (phones, plans, `mostPopularPlan` flag, gallery) + `en` copy object typed as `Copy`; `hi`/`kn` must satisfy the same type. Strings that vary by word order are functions.
 - `reference/pamphlet.jpg` still missing — Phase 1 used BRIEF §4 hex codes/descriptions instead.
 
+### Sections (Phase 2)
+- One component per section in `src/components/sections/`, assembled in `src/pages/index.astro`. All copy from `site.ts`.
+- **Header:** fixed; transparent over hero, solid `royal-deep` + shrink after 8px scroll (tiny script). Mobile menu uses the native **Popover API** (Esc / outside-tap close for free); closes on link tap.
+- **Mobile bar + WhatsApp button:** bar `< md` with Call Now; round WhatsApp button sits inside the bar's footprint (bar has right padding for it), floats bottom-right on `md+`. Footer bottom padding clears both. Automated check: no overlap with footer links or form submit at 360/768/1440.
+- **WhatsApp links:** `whatsappHref()` in `site.ts`. While `contact.whatsapp` is `[TBD]`, links go to `https://wa.me/?text=…` (opens WhatsApp with the message; driver picks the contact). Setting the number in one place fixes every link.
+- **Car placeholder:** `CarStage.astro` = brief's light gradient stage + an SVG line-art white sedan (three-box, not hatchback). Phase 3 swaps in `<model-viewer>`.
+- **FAQ:** native `<details name="faq">` (exclusive accordion, zero JS).
+- **Form:** markup + native validation (`pattern="[6-9][0-9]{9}"`). WhatsApp hand-off, custom errors and plan pre-select (`data-plan` hooks already on Enquire buttons) are Phase 6.
+- **Deferred by phase:** 3D viewer (3), image pipeline + lightbox (4), marquee/counters/all motion (5).
+- Gotcha: `Button`/`Badge` merge caller classes after their own, but Tailwind resolves conflicting utilities by stylesheet order, not class order — wrap the component instead of overriding `display`/margins (hit on header Call Now `hidden`).
+
 ## Open issues
 - `reference/pamphlet.jpg` is **missing** from the project. Needed in Phase 1 for brand color/energy reference.
 - `[TBD: replace with Dzire Tour S model]` — `public/models/dzire-tour-s.glb` not provided yet (Phase 3).
 - All BRIEF §10 items remain `[TBD]`.
+- **WhatsApp number `[TBD]`**: is 8296611117 or 9060772111 on WhatsApp? Until confirmed, WhatsApp buttons open WhatsApp without a pre-set recipient.
+- `₹` glyph is not in Anton's latin subset; it renders from the fallback font (looks fine on Windows/Android). Revisit in Phase 7 if it looks off.

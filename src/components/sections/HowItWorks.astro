@@ -1,0 +1,39 @@
+---
+import { getCopy } from '../../content/site';
+
+const t = getCopy();
+---
+
+<section id="how-it-works" class="bg-royal-tint py-16 md:py-24">
+  <div class="container-page">
+    <h2 class="text-h2 text-royal">{t.howItWorks.heading}</h2>
+    <ol class="relative mt-10 grid gap-8 lg:mt-14 lg:grid-cols-4 lg:gap-6">
+      <!-- The road: vertical on mobile, horizontal on desktop. Steps sit on it. -->
+      <div aria-hidden="true" class="road absolute bottom-0 left-0 top-0 w-12 rounded-plate lg:bottom-auto lg:right-0 lg:h-12 lg:w-auto"></div>
+      {t.howItWorks.steps.map((step, i) => (
+        <li class="relative grid grid-cols-[3rem_1fr] items-center gap-5 lg:grid-cols-1 lg:items-start">
+          <span class="grid size-12 place-items-center rounded-plate border-2 border-ink bg-taxi font-display text-2xl text-ink lg:ml-4">
+            {i + 1}
+          </span>
+          <p class="text-h3 font-display uppercase text-ink">{step}</p>
+        </li>
+      ))}
+    </ol>
+  </div>
+</section>
+
+<style>
+  /* Asphalt with a dashed yellow centre line. */
+  .road {
+    background:
+      repeating-linear-gradient(to bottom, var(--color-taxi) 0 14px, transparent 14px 28px) center / 3px 100% no-repeat,
+      var(--color-ink);
+  }
+  @media (width >= 64rem) {
+    .road {
+      background:
+        repeating-linear-gradient(to right, var(--color-taxi) 0 14px, transparent 14px 28px) center / 100% 3px no-repeat,
+        var(--color-ink);
+    }
+  }
+</style>

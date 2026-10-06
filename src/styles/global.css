@@ -39,7 +39,24 @@
   --font-sans: var(--font-inter);
 }
 
+/* Page gutter + max width, shared by every section. */
+@utility container-page {
+  margin-inline: auto;
+  width: 100%;
+  max-width: 72rem;
+  padding-inline: 1.25rem;
+  @media (width >= 48rem) {
+    padding-inline: 2rem;
+  }
+}
+
 @layer base {
+  /* Anchor jumps land below the sticky header. */
+  html {
+    scroll-behavior: smooth;
+    scroll-padding-top: 4.5rem;
+  }
+
   body {
     @apply bg-white font-sans text-ink antialiased;
   }

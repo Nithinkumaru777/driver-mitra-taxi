@@ -1,0 +1,36 @@
+---
+import { CircleCheck } from '@lucide/astro';
+import CarStage from '../CarStage.astro';
+import { getCopy } from '../../content/site';
+
+const t = getCopy();
+---
+
+<section id="our-car" data-surface="dark" class="bg-royal-deep py-16 text-white md:py-24">
+  <div class="container-page">
+    <h2 class="text-h2">{t.car.heading}</h2>
+    <div class="mt-10 grid gap-10 lg:grid-cols-[1.6fr_1fr] lg:items-center">
+      <CarStage class="aspect-[16/11] w-full" />
+      <div>
+        <h3 class="text-h3 text-taxi">{t.car.specsHeading}</h3>
+        <dl class="mt-4 divide-y divide-white/15 border-y border-white/15">
+          {t.car.specs.map((spec) => (
+            <div class="flex justify-between gap-4 py-3">
+              <dt class="text-mist">{spec.label}</dt>
+              <dd class="font-semibold">{spec.value}</dd>
+            </div>
+          ))}
+        </dl>
+        <h3 class="mt-8 text-h3 text-taxi">{t.car.featuresHeading}</h3>
+        <ul class="mt-4 space-y-3">
+          {t.car.hotspots.map((spot) => (
+            <li class="flex gap-3">
+              <CircleCheck size={22} class="mt-0.5 shrink-0 text-taxi" aria-hidden="true" />
+              <span><span class="font-semibold">{spot.label}</span> <span class="text-mist">{spot.detail}</span></span>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>

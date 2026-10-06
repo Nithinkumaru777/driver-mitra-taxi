@@ -19,6 +19,10 @@ export const contact = {
   mapEmbedUrl: TBD,
 };
 
+/** wa.me link. Until the WhatsApp number is confirmed, opens WhatsApp with the text so the driver can pick a contact. */
+export const whatsappHref = (text: string) =>
+  `https://wa.me/${contact.whatsapp === TBD ? '' : contact.whatsapp}?text=${encodeURIComponent(text)}`;
+
 export type PlanYears = 3 | 4 | 5;
 
 export const plans: { years: PlanYears; dailyRent: string }[] = [
@@ -73,6 +77,7 @@ const en = {
     subline: 'Take a car, drive anywhere, and own it.',
     ctaCall: 'Call Now',
     ctaWhatsApp: 'WhatsApp Us',
+    whatsappText: 'Hi Driver Mitra, I want to book a Dzire Tour S.',
   },
   keyPoints: [
     { title: 'Take a Car & Drive Anywhere' },
@@ -90,10 +95,13 @@ const en = {
   },
   car: {
     heading: 'New Dzire Tour S — Daily Rentals',
+    placeholderAlt: 'White Maruti Suzuki Dzire Tour S sedan',
     modelLabel: '3D model of the Maruti Suzuki Dzire Tour S. Drag to rotate.',
     dragHint: 'Drag to rotate 360°',
     arButton: 'View in your space',
     loading: 'Loading 3D car',
+    specsHeading: 'Specifications',
+    featuresHeading: 'Features',
     specs: [
       { label: 'Fuel type', value: TBD },
       { label: 'Seating', value: TBD },
@@ -171,8 +179,9 @@ const en = {
     address: 'Address',
     email: 'Email',
     map: 'Map',
+    mapComing: 'Map coming soon',
   },
-  mobileBar: { call: 'Call Now', whatsapp: 'WhatsApp' },
+  mobileBar: { call: 'Call Now', whatsapp: 'WhatsApp us' },
   footer: {
     copyright: (year: number) => `© ${year} Driver Mitra Taxi. All rights reserved.`,
   },

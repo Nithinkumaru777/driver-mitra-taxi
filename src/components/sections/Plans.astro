@@ -1,0 +1,30 @@
+---
+import Button from '../ui/Button.astro';
+import Card from '../ui/Card.astro';
+import Badge from '../ui/Badge.astro';
+import { getCopy, plans, mostPopularPlan } from '../../content/site';
+
+const t = getCopy();
+---
+
+<section id="plans" class="bg-white py-16 md:py-24">
+  <div class="container-page">
+    <h2 class="text-h2 text-royal">{t.plans.heading}</h2>
+    <ul class="mt-10 grid gap-6 md:grid-cols-3">
+      {plans.map((plan) => {
+        const popular = plan.years === mostPopularPlan;
+        return (
+          <Card as="li" highlighted={popular} class="relative flex flex-col">
+            {popular && <Badge class="absolute -top-3 right-5">{t.plans.mostPopular}</Badge>}
+            <span aria-hidden="true" class="font-display text-[5.5rem] leading-none text-royal">{plan.years}</span>
+            <h3 class="mt-2 text-h3">{t.plans.planTitle(plan.years)}</h3>
+            <p class="mb-6 mt-3 text-lg text-ink-muted">{t.plans.dailyRent(plan.dailyRent)}</p>
+            <Button href="#enquire" variant="secondary" data-plan={plan.years} class="mt-auto w-full">
+              {t.plans.enquire}
+            </Button>
+          </Card>
+        );
+      })}
+    </ul>
+  </div>
+</section>

@@ -1,0 +1,26 @@
+---
+import { GraduationCap, HeartPulse, Users } from '@lucide/astro';
+import Button from '../ui/Button.astro';
+import { getCopy } from '../../content/site';
+
+const t = getCopy();
+const icons = [GraduationCap, HeartPulse, Users];
+---
+
+<section id="benefits" data-surface="dark" class="bg-royal py-16 text-white md:py-24">
+  <div class="container-page">
+    <h2 class="text-h2">{t.benefits.heading}</h2>
+    <ul class="mt-10 grid gap-8 md:grid-cols-3">
+      {t.benefits.items.map((item, i) => {
+        const Icon = icons[i];
+        return (
+          <li class="border-t-4 border-taxi pt-5">
+            <Icon size={40} stroke-width={1.75} class="text-taxi" aria-hidden="true" />
+            <h3 class="mt-4 text-h3">{item}</h3>
+          </li>
+        );
+      })}
+    </ul>
+    <Button href="#enquire" size="lg" class="mt-12 w-full sm:w-auto">{t.benefits.cta}</Button>
+  </div>
+</section>

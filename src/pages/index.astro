@@ -1,12 +1,42 @@
 ---
 import Base from '../layouts/Base.astro';
+import Checkered from '../components/ui/Checkered.astro';
+import Header from '../components/sections/Header.astro';
+import Hero from '../components/sections/Hero.astro';
+import KeyPoints from '../components/sections/KeyPoints.astro';
+import HowItWorks from '../components/sections/HowItWorks.astro';
+import OurCar from '../components/sections/OurCar.astro';
+import Plans from '../components/sections/Plans.astro';
+import Drivers from '../components/sections/Drivers.astro';
+import Benefits from '../components/sections/Benefits.astro';
+import Attach from '../components/sections/Attach.astro';
+import Faq from '../components/sections/Faq.astro';
+import Enquiry from '../components/sections/Enquiry.astro';
+import Contact from '../components/sections/Contact.astro';
+import MobileBar from '../components/sections/MobileBar.astro';
 import { getCopy } from '../content/site';
 
 const t = getCopy();
 ---
 
 <Base title={t.meta.title} description={t.meta.description}>
-  <main class="grid min-h-screen place-items-center bg-royal text-white" data-surface="dark">
-    <h1 class="text-h1">{t.brand.name}</h1>
+  <a href="#main" class="sr-only z-50 rounded-plate bg-taxi px-4 py-3 font-semibold text-ink focus:not-sr-only focus:fixed focus:left-4 focus:top-4">
+    {t.nav.skipLink}
+  </a>
+  <Header />
+  <main id="main">
+    <Hero />
+    <Checkered tone="yellow-ink" />
+    <KeyPoints />
+    <HowItWorks />
+    <OurCar />
+    <Plans />
+    <Drivers />
+    <Benefits />
+    <Attach />
+    <Faq />
+    <Enquiry />
   </main>
+  <Contact />
+  <MobileBar />
 </Base>

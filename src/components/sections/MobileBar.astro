@@ -1,0 +1,24 @@
+---
+// Call + WhatsApp one tap away everywhere (BRIEF §11). The footer's bottom padding clears both.
+import { Phone, MessageCircle } from '@lucide/astro';
+import Button from '../ui/Button.astro';
+import { getCopy, contact, whatsappHref } from '../../content/site';
+
+const t = getCopy();
+---
+
+<div data-surface="dark" class="fixed inset-x-0 bottom-0 z-30 bg-royal-deep pl-4 pr-24 pb-[calc(0.5rem+env(safe-area-inset-bottom))] pt-2 shadow-lift md:hidden">
+  <!-- Right padding leaves room for the WhatsApp button, which sits in the bar's footprint. -->
+  <Button href={`tel:${contact.phones[0].tel}`} icon={Phone} size="lg" class="w-full">{t.mobileBar.call}</Button>
+</div>
+
+<a
+  href={whatsappHref(t.hero.whatsappText)}
+  target="_blank"
+  rel="noopener"
+  aria-label={t.mobileBar.whatsapp}
+  data-surface="dark"
+  class="fixed bottom-[calc(1.25rem+env(safe-area-inset-bottom))] right-4 z-30 grid size-15 place-items-center rounded-full border-2 border-white bg-royal text-white shadow-lift transition-transform active:scale-95 md:bottom-6 md:right-6"
+>
+  <MessageCircle size={30} stroke-width={2.25} aria-hidden="true" />
+</a>

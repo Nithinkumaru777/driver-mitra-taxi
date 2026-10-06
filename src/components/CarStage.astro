@@ -1,0 +1,45 @@
+---
+// Light "stage" for the car. Phase 3 replaces the SVG placeholder with <model-viewer> + poster.
+import { getCopy } from '../content/site';
+
+interface Props {
+  class?: string;
+}
+
+const { class: className } = Astro.props;
+const t = getCopy();
+---
+
+<div
+  class:list={[
+    'relative isolate overflow-hidden rounded-card bg-linear-to-b from-royal-tint to-white',
+    'after:absolute after:inset-x-0 after:bottom-0 after:-z-10 after:h-1/4 after:bg-royal-tint/60',
+    className,
+  ]}
+>
+  <svg
+    viewBox="0 0 400 150"
+    role="img"
+    aria-label={t.car.placeholderAlt}
+    class="absolute inset-x-[6%] bottom-[12%] w-[88%]"
+    stroke-linejoin="round"
+    stroke-linecap="round"
+  >
+    <ellipse cx="200" cy="136" rx="182" ry="8" fill="var(--color-royal-deep)" opacity="0.18" />
+    <path
+      d="M16 108V92q0-10 14-13l92-9q24-22 48-30q44-8 92-4q30 10 56 32l52 4q16 2 16 18v16q0 6-6 6h-42a28 28 0 0 0-56 0H122a28 28 0 0 0-56 0H22q-6 0-6-4Z"
+      fill="var(--color-white)"
+      stroke="var(--color-royal-deep)"
+      stroke-width="2.5"
+    />
+    <path d="M136 70l36-24q24-5 50-6v30ZM232 40q30 0 52 10l20 19-72 1Z" fill="var(--color-mist)" stroke="var(--color-royal-deep)" stroke-width="2" />
+    <path d="M30 90l350 2M228 72v36M20 86l20-2" fill="none" stroke="var(--color-royal-deep)" stroke-width="1.5" opacity="0.5" />
+    {[94, 310].map((cx) => (
+      <g>
+        <circle cx={cx} cy="112" r="22" fill="var(--color-ink)" />
+        <circle cx={cx} cy="112" r="9" fill="var(--color-mist)" />
+      </g>
+    ))}
+  </svg>
+  <slot />
+</div>

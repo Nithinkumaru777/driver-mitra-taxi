@@ -1,0 +1,17 @@
+---
+// Text only: never Ola/Uber logos (BRIEF §11). Phase 5 adds the marquee.
+import { getCopy } from '../../content/site';
+
+const t = getCopy();
+---
+
+<section aria-labelledby="attach-heading" class="bg-taxi py-12 text-ink md:py-16">
+  <div class="container-page flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
+    <h2 id="attach-heading" class="text-h2">{t.attach.heading}</h2>
+    <ul class="flex flex-wrap gap-3">
+      {t.attach.platforms.map((p) => (
+        <li class="rounded-plate border-2 border-ink px-5 py-2 font-display text-h3 uppercase">{p}</li>
+      ))}
+    </ul>
+  </div>
+</section>

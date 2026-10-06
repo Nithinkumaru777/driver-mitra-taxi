@@ -1,0 +1,80 @@
+---
+import { Phone, Menu, X } from '@lucide/astro';
+import Button from '../ui/Button.astro';
+import { getCopy, contact } from '../../content/site';
+
+const t = getCopy();
+const tel = `tel:${contact.phones[0].tel}`;
+// Logo lockup: last word of the brand name sits in a yellow number plate.
+const logoWords = t.brand.name.split(' ');
+const logoPlate = logoWords.pop();
+---
+
+<header
+  id="site-header"
+  data-surface="dark"
+  class="fixed inset-x-0 top-0 z-40 text-white transition-[background-color,box-shadow,padding] duration-200 py-3 data-scrolled:bg-royal-deep data-scrolled:py-1.5 data-scrolled:shadow-card"
+>
+  <div class="container-page flex items-center justify-between gap-4">
+    <a href="#top" class="flex items-center gap-2 font-display text-2xl uppercase leading-none tracking-wide">
+      {logoWords.join(' ')}
+      <span class="rounded-plate border-2 border-ink bg-taxi px-1.5 py-0.5 text-base text-ink">{logoPlate}</span>
+    </a>
+
+    <nav aria-label="Main" class="hidden lg:block">
+      <ul class="flex items-center gap-6 text-[0.9375rem] font-semibold">
+        {t.nav.items.map((item) => (
+          <li><a href={item.href} class="py-2 text-mist transition-colors hover:text-white">{item.label}</a></li>
+        ))}
+      </ul>
+    </nav>
+
+    <div class="flex items-center gap-2">
+      <div class="hidden md:block"><Button href={tel} icon={Phone}>{t.nav.callNow}</Button></div>
+      <button
+        type="button"
+        popovertarget="menu"
+        class="grid size-12 place-items-center rounded-plate lg:hidden"
+        aria-label={t.nav.openMenu}
+      >
+        <Menu size={28} aria-hidden="true" />
+      </button>
+    </div>
+  </div>
+</header>
+
+<div id="menu" popover data-surface="dark" class="m-0 h-dvh max-h-none w-full max-w-none bg-royal-deep p-0 text-white lg:hidden">
+  <div class="container-page flex items-center justify-between py-3">
+    <span class="font-display text-2xl uppercase">{t.brand.name}</span>
+    <button
+      type="button"
+      popovertarget="menu"
+      popovertargetaction="hide"
+      class="grid size-12 place-items-center rounded-plate"
+      aria-label={t.nav.closeMenu}
+    >
+      <X size={28} aria-hidden="true" />
+    </button>
+  </div>
+  <nav aria-label="Mobile" class="container-page mt-4">
+    <ul class="divide-y divide-white/15">
+      {t.nav.items.map((item) => (
+        <li><a href={item.href} class="block py-4 font-display text-h3 uppercase">{item.label}</a></li>
+      ))}
+    </ul>
+    <Button href={tel} icon={Phone} size="lg" class="mt-8 w-full">{t.nav.callNow}</Button>
+  </nav>
+</div>
+
+<script>
+  const header = document.getElementById('site-header')!;
+  const onScroll = () => header.toggleAttribute('data-scrolled', scrollY > 8);
+  onScroll();
+  addEventListener('scroll', onScroll, { passive: true });
+
+  // Popover closes itself on outside click / Esc; close it on link taps too.
+  const menu = document.getElementById('menu')!;
+  menu.addEventListener('click', (e) => {
+    if ((e.target as Element).closest('a')) menu.hidePopover();
+  });
+</script>

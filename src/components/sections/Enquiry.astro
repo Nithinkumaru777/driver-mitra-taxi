@@ -1,0 +1,76 @@
+---
+// Markup + native validation only. Phase 6 adds the WhatsApp hand-off, custom errors and plan pre-select.
+import { MessageCircle } from '@lucide/astro';
+import Button from '../ui/Button.astro';
+import { getCopy, plans } from '../../content/site';
+
+const t = getCopy();
+const field = 'block min-h-12 w-full border-2 border-royal/60 bg-white px-4 text-base text-ink focus:border-royal';
+const label = 'font-semibold';
+const choice = 'flex min-h-12 cursor-pointer items-center gap-3 rounded-plate border-2 border-royal/60 px-4 has-checked:border-royal has-checked:bg-royal-tint';
+---
+
+<section id="enquire" class="bg-royal-tint py-16 md:py-24">
+  <div class="container-page">
+    <h2 class="text-h2 text-royal">{t.form.heading}</h2>
+    <form id="enquiry-form" class="mt-8 grid max-w-3xl gap-6 rounded-card bg-white p-5 shadow-card md:grid-cols-2 md:p-8">
+      <label class={label}>
+        {t.form.name}
+        <input name="name" type="text" autocomplete="name" required class:list={[field, 'mt-2 rounded-plate']} />
+      </label>
+
+      <label class={label}>
+        {t.form.mobile}
+        <span class="mt-2 flex">
+          <span class="grid place-items-center rounded-l-plate border-2 border-r-0 border-royal/60 bg-royal-tint px-3 text-ink-muted">+91</span>
+          <input
+            name="mobile"
+            type="tel"
+            inputmode="numeric"
+            autocomplete="tel-national"
+            pattern="[6-9][0-9]{9}"
+            maxlength="10"
+            required
+            class:list={[field, 'rounded-r-plate']}
+          />
+        </span>
+      </label>
+
+      <label class={label}>
+        {t.form.city}
+        <input name="city" type="text" autocomplete="address-level2" required class:list={[field, 'mt-2 rounded-plate']} />
+      </label>
+
+      <fieldset class="md:col-span-2">
+        <legend class={label}>{t.form.plan}</legend>
+        <div class="mt-2 grid gap-3">
+          {plans.map((p) => (
+            <label class={choice}>
+              <input type="radio" name="plan" value={p.years} required class="size-5 accent-royal" />
+              {t.plans.planTitle(p.years)}
+            </label>
+          ))}
+        </div>
+      </fieldset>
+
+      <fieldset class="md:col-span-2">
+        <legend class={label}>{t.form.licence}</legend>
+        <div class="mt-2 grid grid-cols-2 gap-3 sm:max-w-xs">
+          {[t.form.yes, t.form.no].map((v) => (
+            <label class={choice}>
+              <input type="radio" name="licence" value={v} required class="size-5 accent-royal" />
+              {v}
+            </label>
+          ))}
+        </div>
+      </fieldset>
+
+      <label class:list={[label, 'md:col-span-2']}>
+        {t.form.message} <span class="font-normal text-ink-muted">({t.form.optional})</span>
+        <textarea name="message" rows="3" class:list={[field, 'mt-2 rounded-plate py-3']}></textarea>
+      </label>
+
+      <Button type="submit" icon={MessageCircle} size="lg" class="w-full md:col-span-2">{t.form.submit}</Button>
+    </form>
+  </div>
+</section>

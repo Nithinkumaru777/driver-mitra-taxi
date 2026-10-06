@@ -1,0 +1,26 @@
+---
+import { Car, Smartphone, KeyRound } from '@lucide/astro';
+import { getCopy } from '../../content/site';
+
+const t = getCopy();
+const icons = [Car, Smartphone, KeyRound];
+---
+
+<section aria-label={t.brand.tagline} class="bg-white py-12 md:py-16">
+  <ul class="container-page grid gap-8 lg:grid-cols-3 lg:gap-0 lg:divide-x lg:divide-royal-tint">
+    {t.keyPoints.map((point, i) => {
+      const Icon = icons[i];
+      return (
+        <li class="flex items-start gap-4 lg:px-8 lg:first:pl-0 lg:last:pr-0">
+          <span class="grid size-14 shrink-0 place-items-center rounded-plate border-2 border-ink bg-taxi text-ink">
+            <Icon size={28} stroke-width={2} aria-hidden="true" />
+          </span>
+          <div>
+            <h3 class="text-h3">{point.title}</h3>
+            {point.detail && <p class="mt-1 text-ink-muted">{point.detail}</p>}
+          </div>
+        </li>
+      );
+    })}
+  </ul>
+</section>
