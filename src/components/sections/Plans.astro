@@ -38,7 +38,7 @@ const glow =
   const cards = [...document.querySelectorAll<HTMLElement>('[data-plans] > li')];
   cards.forEach((card) => countUp(card.querySelector('[data-count]')!));
 
-  // Clicking Enquire marks that card as selected (Phase 6 also pre-selects the plan in the form).
+  // Clicking Enquire marks that card as selected (Enquiry.astro pre-selects the plan in the form).
   document.querySelector('[data-plans]')!.addEventListener('click', (e) => {
     const button = (e.target as Element).closest('[data-plan]');
     if (button) cards.forEach((c) => c.toggleAttribute('data-selected', c.contains(button)));

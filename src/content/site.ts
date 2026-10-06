@@ -175,7 +175,10 @@ const en = {
     message: 'Message',
     optional: 'optional',
     submit: 'Send on WhatsApp',
+    successHeading: 'Almost done!',
     success: 'WhatsApp is opening with your details. Send the message to finish your enquiry.',
+    openWhatsApp: 'Open WhatsApp again',
+    edit: 'Edit my details',
     errors: {
       name: 'Enter your name.',
       mobile: 'Enter a 10-digit mobile number starting with 6, 7, 8 or 9.',

@@ -14,12 +14,32 @@ import Faq from '../components/sections/Faq.astro';
 import Enquiry from '../components/sections/Enquiry.astro';
 import Contact from '../components/sections/Contact.astro';
 import MobileBar from '../components/sections/MobileBar.astro';
-import { getCopy } from '../content/site';
+import { getCopy, contact, TBD } from '../content/site';
 
 const t = getCopy();
+
+// LocalBusiness structured data. Unknown facts (address, email) come from site.ts and stay [TBD] there.
+const home = new URL('/', Astro.site).href;
+const business = {
+  '@context': 'https://schema.org',
+  '@type': 'LocalBusiness',
+  '@id': `${home}#business`,
+  name: t.brand.name,
+  description: t.meta.description,
+  slogan: t.brand.tagline,
+  url: home,
+  image: new URL('/og-image.jpg', Astro.site).href,
+  telephone: contact.phones[0].tel,
+  contactPoint: contact.phones.map((p) => ({ '@type': 'ContactPoint', telephone: p.tel, contactType: 'sales' })),
+  ...(contact.email !== TBD && { email: contact.email }),
+  address: { '@type': 'PostalAddress', streetAddress: contact.address, addressCountry: 'IN' },
+};
+// Escape "<" so nothing in the data can close the script tag.
+const jsonLd = JSON.stringify(business).replace(/</g, '\\u003c');
 ---
 
 <Base title={t.meta.title} description={t.meta.description}>
+  <script slot="head" type="application/ld+json" set:html={jsonLd} />
   <a href="#main" class="sr-only z-50 rounded-plate bg-taxi px-4 py-3 font-semibold text-ink focus:not-sr-only focus:fixed focus:left-4 focus:top-4">
     {t.nav.skipLink}
   </a>

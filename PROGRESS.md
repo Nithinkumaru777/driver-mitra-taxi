@@ -10,7 +10,7 @@
 | 3. 3D car viewer | ✅ Done (awaiting review) | `<model-viewer>` in both car stages; CC0 placeholder sedan (13 KB GLB) — `[TBD: replace with Dzire Tour S model]` |
 | 4. Driver gallery | ✅ Done (awaiting review) | `npm run drivers` (sharp → AVIF+WebP ×4 widths, EXIF/GPS stripped); grid + `<dialog>` lightbox; 4 neutral placeholders with `[TBD]` captions |
 | 5. Motion | ✅ Done (awaiting review) | All 8 §7 moments; 3 motion tiers; no jank at 4× CPU throttle (p95 frame 11 ms, 0 long tasks); success checkmark deferred to Phase 6 |
-| 6. Form, SEO, integrations | ⏳ Not started | |
+| 6. Form, SEO, integrations | ✅ Done (awaiting review) | Form validation + wa.me hand-off + plan pre-select; full SEO head, LocalBusiness JSON-LD (schema.org validator: 0 errors, 0 warnings), sitemap, robots, favicon set, manifest |
 | 7. QA & polish | ⏳ Not started | |
 | 8. Handover | ⏳ Not started | |
 
@@ -178,11 +178,27 @@ Format: skill → phase(s) used, or "not relevant".
   - No horizontal scroll; no page errors; `astro check` and build clean.
 - **Deferred:** the success checkmark animation belongs to the form success state, which Phase 6 builds.
 
+### Form, SEO, integrations (Phase 6)
+- **Skills:** no dedicated SEO/forms skill installed (gap noted in Phase 0). TDD for the form logic (`npm test`, Node's built-in `node:test`, no new deps). Security pass on the hand-off: user text only ever goes through `encodeURIComponent` into a `wa.me` query; JSON-LD escapes `<`; no secrets in the client.
+- **Form logic:** `src/scripts/enquiry.ts` (no DOM): `parseMobile`, `validateEnquiry`, `enquiryMessage`, `submitEnquiry`. **To plug in a backend or email service, change `submitEnquiry()` only.** `Enquiry.astro` just wires it to the DOM.
+- **Mobile rule:** strips spaces/dashes and a `+91` / `91` / `0` prefix, then requires 10 digits starting 6–9; also rejects one repeated digit (`9999999999`). `maxlength` removed so pasted `+91 98765 43210` isn't cut off. Without JS, native `required` + `pattern` still apply.
+- **Errors:** custom messages from `t.form.errors`, shown under each field (`aria-invalid` + `aria-describedby`; groups described on the `<fieldset>`), focus moves to the first bad field, errors clear live once fixed. New token `danger` `#B3261E` (on white only), added to the styleguide AA check.
+- **Hand-off:** `window.open(wa.me…)` in the submit handler (user gesture → not pop-up blocked). Success panel replaces the form: stamped checkmark (same keyframes as ₹10,000, off in reduced motion), focus on its heading, **Open WhatsApp again** (in case the pop-up was blocked or WhatsApp was closed) and **Edit my details** (values kept).
+- **Plan pre-select:** any `[data-plan]` click (plan cards' Enquire) checks that plan in the form and re-shows the form if the success panel was up.
+- **SEO head (`Base.astro`):** title, description, canonical, Open Graph (incl. image size/alt, `en_IN`), Twitter `summary_large_image`, theme-color, icons, manifest. `noindex` prop used by `/styleguide` (it gets no canonical and isn't in the sitemap).
+- **og:image** `public/og-image.jpg` 1200×630 JPEG = car poster on the brand stage. JPEG, not the WebP poster, because every share preview (WhatsApp included) accepts it.
+- **JSON-LD** `LocalBusiness` in `index.astro`, built from `site.ts`: name, description, slogan, url, image, telephone, both phones as `ContactPoint`s, `PostalAddress` with `streetAddress: [TBD]` + `addressCountry: IN`. Email is added automatically once it isn't `[TBD]`. Validated on validator.schema.org: 0 errors, 0 warnings. (Google's LocalBusiness rich result will want a real street/locality/postcode — `[TBD]`.)
+- **sitemap.xml / robots.txt / manifest.webmanifest** are Astro endpoints (no `@astrojs/sitemap` dependency for a one-page site).
+- **Domain `[TBD]`:** `site` in `astro.config.mjs` = `process.env.SITE_URL`, falling back to the reserved `https://drivermitrataxi.example`. Set `SITE_URL` in the host's build settings before going live, or canonical/OG/sitemap point at the placeholder.
+- **Icons `[TBD: logo]`:** `npm run icons` (`scripts/icons.mjs`, sharp) writes favicon.svg, favicon.ico (PNG-in-ICO 32px), apple-touch-icon 180, icon-192/512, maskable-512 and og-image.jpg. Motif = checkered taxi tile on royal until the client's logo arrives. Re-run after regenerating the car poster.
+- **Verified (Playwright, built site, 360px):** empty submit → 5 errors, focus on Name; `12345`, `5876543210`, `9999999999`, `98765432101` all blocked (nothing opened, error shown, `aria-invalid`); Enquire on the 4-year card → plan 4 checked; `+91 98765 43210` accepted; opened `https://wa.me/?text=…` decodes to the exact expected message; success panel shown and focused; Edit keeps values. No page errors, no horizontal scroll. `npm test` 4/4, `astro check` 0/0/0, build clean.
+
 ## Open issues
 - `reference/pamphlet.jpg` is **missing** from the project. Needed in Phase 1 for brand color/energy reference.
 - **`[TBD: replace with Dzire Tour S model]`** — `public/models/dzire-tour-s.glb` not provided. The site uses a CC0 low-poly white sedan placeholder (`public/models/placeholder-sedan.glb`, 13 KB) and a poster rendered from it. Needed from client: a white Dzire Tour S GLB (or approval to buy a licensed one). Swap steps under "3D car viewer (Phase 3)".
 - AR ("View in your space") untested on a real Android/iOS phone — Phase 7 device check.
 - All BRIEF §10 items remain `[TBD]`.
+- **Domain `[TBD]`**: set `SITE_URL` on the host. **Logo `[TBD]`**: replace the checkered icon via `scripts/icons.mjs`. **Address `[TBD]`**: JSON-LD needs street, locality, postcode for Google's local rich result.
 - **Driver photos + consent `[TBD]`**: the gallery shows 4 neutral placeholders. `driversOnRoad` count `[TBD]`. Alt text pattern says "his" (BRIEF §8). Make it gender-aware if any driver is not male.
 - **WhatsApp number `[TBD]`**: is 8296611117 or 9060772111 on WhatsApp? Until confirmed, WhatsApp buttons open WhatsApp without a pre-set recipient.
 - model-viewer 4.3.1 ships debug `console.log`s (`[$updateSource] called!`, `IntersectionObserver fired!`). Logs, not errors; check against Phase 7's "zero console errors" and pin or patch if needed.

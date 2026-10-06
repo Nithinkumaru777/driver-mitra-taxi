@@ -13,6 +13,7 @@
   --color-ink: #121826;
   --color-ink-muted: #4B5568;
   --color-mist: #C8D5EE;
+  --color-danger: #B3261E; /* form errors, on white only */
 
   /* Fluid display scale (Anton is condensed, so it runs large). */
   --text-display: clamp(2.75rem, 1.5rem + 6vw, 6.5rem);
@@ -151,7 +152,12 @@
   35%, 100% { opacity: 0; transform: scale(1.08, 1.45); }
 }
 
-[data-motion="reduced"] :is(.hero-wipe, .hero-word, .hero-stamp, .marquee-track),
+/* Form success: the checkmark lands with the same stamp as ₹10,000. */
+.success-check {
+  animation: hero-stamp 420ms both;
+}
+
+[data-motion="reduced"] :is(.hero-wipe, .hero-word, .hero-stamp, .marquee-track, .success-check),
 [data-motion="reduced"] [data-pulse]::after {
   /* (pseudo-elements can't go inside :is()) */
   animation: none;

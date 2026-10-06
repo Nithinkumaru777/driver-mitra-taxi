@@ -1,27 +1,29 @@
 ---
-// Markup + native validation only. Phase 6 adds the WhatsApp hand-off, custom errors and plan pre-select.
-import { MessageCircle } from '@lucide/astro';
+// Validation and the WhatsApp hand-off live in src/scripts/enquiry.ts; this file only wires them to the DOM.
+import { Check, MessageCircle } from '@lucide/astro';
 import Button from '../ui/Button.astro';
 import { getCopy, plans } from '../../content/site';
 
 const t = getCopy();
-const field = 'block min-h-12 w-full border-2 border-royal/60 bg-white px-4 text-base text-ink focus:border-royal';
+const field = 'block min-h-12 w-full border-2 border-royal/60 bg-white px-4 text-base text-ink focus:border-royal aria-invalid:border-danger';
 const label = 'font-semibold';
 // Focus animation: a bar under the field scales in from the left (transform only).
 const bar = 'pointer-events-none absolute inset-x-0 bottom-0 h-1 origin-left scale-x-0 rounded-b-plate bg-taxi transition-transform duration-200 peer-focus:scale-x-100';
+const error = 'mt-2 block text-sm font-semibold text-danger';
 const choice = 'flex min-h-12 cursor-pointer items-center gap-3 rounded-plate border-2 border-royal/60 px-4 has-checked:border-royal has-checked:bg-royal-tint';
 ---
 
 <section id="enquire" class="bg-royal-tint py-16 md:py-24">
   <div class="container-page">
-    <h2 class="text-h2 text-royal">{t.form.heading}</h2>
-    <form id="enquiry-form" class="mt-8 grid max-w-3xl gap-6 rounded-card bg-white p-5 shadow-card md:grid-cols-2 md:p-8">
+    <h2 id="enquiry-heading" class="text-h2 text-royal">{t.form.heading}</h2>
+    <form id="enquiry-form" aria-labelledby="enquiry-heading" class="mt-8 grid max-w-3xl gap-6 rounded-card bg-white p-5 shadow-card md:grid-cols-2 md:p-8">
       <label class={label}>
         {t.form.name}
         <span class="relative mt-2 block">
-          <input name="name" type="text" autocomplete="name" required class:list={[field, 'peer rounded-plate']} />
+          <input name="name" aria-describedby="err-name" type="text" autocomplete="name" required class:list={[field, 'peer rounded-plate']} />
           <span aria-hidden="true" class={bar}></span>
         </span>
+        <span id="err-name" class={error} hidden></span>
       </label>
 
       <label class={label}>
@@ -31,28 +33,30 @@ const choice = 'flex min-h-12 cursor-pointer items-center gap-3 rounded-plate bo
           <span class="relative block flex-1">
             <input
               name="mobile"
+              aria-describedby="err-mobile"
               type="tel"
               inputmode="numeric"
               autocomplete="tel-national"
               pattern="[6-9][0-9]{9}"
-              maxlength="10"
               required
               class:list={[field, 'peer rounded-r-plate']}
             />
             <span aria-hidden="true" class={bar}></span>
           </span>
         </span>
+        <span id="err-mobile" class={error} hidden></span>
       </label>
 
       <label class={label}>
         {t.form.city}
         <span class="relative mt-2 block">
-          <input name="city" type="text" autocomplete="address-level2" required class:list={[field, 'peer rounded-plate']} />
+          <input name="city" aria-describedby="err-city" type="text" autocomplete="address-level2" required class:list={[field, 'peer rounded-plate']} />
           <span aria-hidden="true" class={bar}></span>
         </span>
+        <span id="err-city" class={error} hidden></span>
       </label>
 
-      <fieldset class="md:col-span-2">
+      <fieldset aria-describedby="err-plan" class="md:col-span-2">
         <legend class={label}>{t.form.plan}</legend>
         <div class="mt-2 grid gap-3">
           {plans.map((p) => (
@@ -62,9 +66,10 @@ const choice = 'flex min-h-12 cursor-pointer items-center gap-3 rounded-plate bo
             </label>
           ))}
         </div>
+        <span id="err-plan" class={error} hidden></span>
       </fieldset>
 
-      <fieldset class="md:col-span-2">
+      <fieldset aria-describedby="err-licence" class="md:col-span-2">
         <legend class={label}>{t.form.licence}</legend>
         <div class="mt-2 grid grid-cols-2 gap-3 sm:max-w-xs">
           {[t.form.yes, t.form.no].map((v) => (
@@ -74,6 +79,7 @@ const choice = 'flex min-h-12 cursor-pointer items-center gap-3 rounded-plate bo
             </label>
           ))}
         </div>
+        <span id="err-licence" class={error} hidden></span>
       </fieldset>
 
       <label class:list={[label, 'md:col-span-2']}>
@@ -86,5 +92,88 @@ const choice = 'flex min-h-12 cursor-pointer items-center gap-3 rounded-plate bo
 
       <Button type="submit" icon={MessageCircle} size="lg" class="w-full md:col-span-2">{t.form.submit}</Button>
     </form>
+
+    <div id="enquiry-done" hidden class="mt-8 max-w-3xl rounded-card bg-white p-5 text-center shadow-card md:p-8">
+      <span class="success-check mx-auto grid size-16 place-items-center rounded-full bg-royal text-taxi">
+        <Check size={36} stroke-width={3} aria-hidden="true" />
+      </span>
+      <h3 tabindex="-1" class="mt-4 text-h3 text-royal">{t.form.successHeading}</h3>
+      <p class="mx-auto mt-2 max-w-md text-lg">{t.form.success}</p>
+      <div class="mt-6 flex flex-col justify-center gap-3 sm:flex-row">
+        <Button href="#" data-reopen icon={MessageCircle} target="_blank" rel="noopener">{t.form.openWhatsApp}</Button>
+        <Button data-edit variant="secondary">{t.form.edit}</Button>
+      </div>
+    </div>
   </div>
 </section>
+
+<script>
+  import { getCopy } from '../../content/site';
+  import { validateEnquiry, submitEnquiry, type Enquiry, type EnquiryErrors } from '../../scripts/enquiry';
+
+  const t = getCopy();
+  const form = document.querySelector<HTMLFormElement>('#enquiry-form')!;
+  const done = document.querySelector<HTMLElement>('#enquiry-done')!;
+  const reopen = done.querySelector<HTMLAnchorElement>('[data-reopen]')!;
+  const keys = ['name', 'mobile', 'city', 'plan', 'licence'] as const;
+
+  // JS shows its own messages; without JS the native required/pattern checks still apply.
+  form.noValidate = true;
+  let submitted = false;
+
+  const read = (): Enquiry => {
+    const d = new FormData(form);
+    const get = (k: string) => String(d.get(k) ?? '');
+    return { name: get('name'), mobile: get('mobile'), city: get('city'), plan: get('plan'), licence: get('licence'), message: get('message') };
+  };
+
+  const showErrors = (errors: EnquiryErrors) => {
+    for (const key of keys) {
+      const msg = errors[key];
+      const el = form.querySelector<HTMLElement>(`#err-${key}`)!;
+      el.textContent = msg ?? '';
+      el.hidden = !msg;
+      form.querySelectorAll(`[name="${key}"]`).forEach((input) =>
+        msg ? input.setAttribute('aria-invalid', 'true') : input.removeAttribute('aria-invalid'),
+      );
+    }
+  };
+
+  const showForm = (focus: boolean) => {
+    form.hidden = false;
+    done.hidden = true;
+    if (focus) form.querySelector<HTMLElement>('[name="name"]')!.focus();
+  };
+
+  form.addEventListener('submit', (e) => {
+    e.preventDefault();
+    submitted = true;
+    const data = read();
+    const errors = validateEnquiry(data, t);
+    showErrors(errors);
+    const first = keys.find((k) => errors[k]);
+    if (first) return form.querySelector<HTMLElement>(`[name="${first}"]`)!.focus();
+
+    const href = submitEnquiry(data, t);
+    window.open(href, '_blank', 'noopener');
+    reopen.href = href; // in case the pop-up was blocked or WhatsApp was closed
+    form.hidden = true;
+    done.hidden = false;
+    done.querySelector('h3')!.focus();
+  });
+
+  // After the first submit, errors clear as soon as a field is fixed.
+  form.addEventListener('input', () => submitted && showErrors(validateEnquiry(read(), t)));
+
+  done.querySelector('[data-edit]')!.addEventListener('click', () => showForm(true));
+
+  // The plan cards' Enquire links (data-plan) pre-select that plan; the link itself scrolls here.
+  document.addEventListener('click', (e) => {
+    const button = (e.target as Element).closest<HTMLElement>('[data-plan]');
+    const radio = button && form.querySelector<HTMLInputElement>(`input[name="plan"][value="${button.dataset.plan}"]`);
+    if (!radio) return;
+    radio.checked = true;
+    showForm(false);
+    form.dispatchEvent(new Event('input'));
+  });
+</script>
