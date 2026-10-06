@@ -12,7 +12,7 @@
 | 5. Motion | ✅ Done (awaiting review) | All 8 §7 moments; 3 motion tiers; no jank at 4× CPU throttle (p95 frame 11 ms, 0 long tasks); success checkmark deferred to Phase 6 |
 | 6. Form, SEO, integrations | ✅ Done (awaiting review) | Form validation + wa.me hand-off + plan pre-select; full SEO head, LocalBusiness JSON-LD (schema.org validator: 0 errors, 0 warnings), sitemap, robots, favicon set, manifest |
 | 7. QA & polish | ✅ Done (awaiting review) | Lighthouse mobile 96 / 100 / 100 / 100 (median of 3); Playwright pass on nav, CTAs, form, lightbox, 3D fallback, mobile menu; keyboard + SR pass; 0 console errors |
-| 8. Handover | ⏳ Not started | |
+| 8. Handover | ✅ Done (awaiting review) | Plain-language `README.md` (run, edit, prices, driver photo + consent, 3D model swap, Netlify/Vercel deploy, troubleshooting); `TBD.md` lists 23 client items. Driver-photo, models:compress and SITE_URL build steps dry-run verified, then reverted |
 
 ## Decisions
 
