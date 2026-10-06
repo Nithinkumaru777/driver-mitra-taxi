@@ -7,7 +7,7 @@
 | 0. Setup & skill discovery | ✅ Done (awaiting review) | Astro scaffolded, Tailwind wired, dev server runs, git initialised |
 | 1. Design system & content | ✅ Done (awaiting review) | Tokens, fonts, Lucide, Checkered/Button/Card/Badge, `src/content/site.ts`, `/styleguide` |
 | 2. All sections (static) | ✅ Done (awaiting review) | 12 sections in `src/components/sections/`; verified 360/768/1440 |
-| 3. 3D car viewer | ⏳ Not started | |
+| 3. 3D car viewer | ✅ Done (awaiting review) | `<model-viewer>` in both car stages; CC0 placeholder sedan (13 KB GLB) — `[TBD: replace with Dzire Tour S model]` |
 | 4. Driver gallery | ⏳ Not started | |
 | 5. Motion | ⏳ Not started | |
 | 6. Form, SEO, integrations | ⏳ Not started | |
@@ -120,15 +120,32 @@ Format: skill → phase(s) used, or "not relevant".
 - **Header:** fixed; transparent over hero, solid `royal-deep` + shrink after 8px scroll (tiny script). Mobile menu uses the native **Popover API** (Esc / outside-tap close for free); closes on link tap.
 - **Mobile bar + WhatsApp button:** bar `< md` with Call Now; round WhatsApp button sits inside the bar's footprint (bar has right padding for it), floats bottom-right on `md+`. Footer bottom padding clears both. Automated check: no overlap with footer links or form submit at 360/768/1440.
 - **WhatsApp links:** `whatsappHref()` in `site.ts`. While `contact.whatsapp` is `[TBD]`, links go to `https://wa.me/?text=…` (opens WhatsApp with the message; driver picks the contact). Setting the number in one place fixes every link.
-- **Car placeholder:** `CarStage.astro` = brief's light gradient stage + an SVG line-art white sedan (three-box, not hatchback). Phase 3 swaps in `<model-viewer>`.
+- **Car placeholder:** `CarStage.astro` = brief's light gradient stage + an SVG line-art white sedan (three-box, not hatchback). Replaced by `<model-viewer>` in Phase 3.
 - **FAQ:** native `<details name="faq">` (exclusive accordion, zero JS).
 - **Form:** markup + native validation (`pattern="[6-9][0-9]{9}"`). WhatsApp hand-off, custom errors and plan pre-select (`data-plan` hooks already on Enquire buttons) are Phase 6.
 - **Deferred by phase:** 3D viewer (3), image pipeline + lightbox (4), marquee/counters/all motion (5).
 - Gotcha: `Button`/`Badge` merge caller classes after their own, but Tailwind resolves conflicting utilities by stylesheet order, not class order — wrap the component instead of overriding `display`/margins (hit on header Call Now `hidden`).
 
+### 3D car viewer (Phase 3)
+- **Component:** `src/components/CarStage.astro` (Hero with `eager`, and Our Car). Model + poster paths: `carModel` in `site.ts`.
+- **Load order:** poster `<img>` renders instantly (hero: `fetchpriority=high`). The `model-viewer` JS (~285 KB gzip, includes three.js) is a lazy chunk, `import()`ed only when a stage is within 300px of the viewport **and** WebGL2 exists. Each viewer has `loading="lazy"`, so the Our Car one waits until visible. Poster fades out on `load`.
+- **Fallback:** no WebGL2 → JS never downloads, poster stays. GLB/JS load error → `data-state="error"`, viewer removed, poster stays. Verified in Playwright (WebGL stubbed out; GLB routed to 404).
+- **Behaviour = native model-viewer attributes:** `auto-rotate` 25°/s, pauses on interaction, resumes after `auto-rotate-delay=3000`; `camera-controls`, `disable-pan`, polar limits 40°–88° (no under-floor view), default zoom limits; `environment-image="neutral"`, `exposure=0.8` (white body washed out on the pale stage at 1.0), soft contact shadow. Measured: 801.6° → 826.8° in 1 s; frozen 2 s after a drag; rotating again ~3.5 s after.
+- **Hint chip** "Drag to rotate 360°" shows once the model is ready, fades on the first `camera-change` with `source === 'user-interaction'`. model-viewer's hand prompt is off.
+- **AR:** `ar ar-modes="webxr scene-viewer quick-look"` + "View in your space" button in the `ar-button` slot (model-viewer only shows it where AR can launch). iOS Quick Look uses model-viewer's auto-generated USDZ.
+- **Reduced motion:** `auto-rotate` removed before model-viewer upgrades (verified). Scroll-linked rotation + low-end-device checks are Phase 5.
+- **Loader:** royal progress bar (`role="progressbar"`, `aria-valuenow`) driven by model-viewer's `progress` event; hidden on ready/error.
+- **Compression:** `npm run models:compress -- <in.glb> <out.glb>` = `gltf-transform optimize --compress draco --texture-compress webp --texture-size 2048`. Placeholder: 187 KB → 13 KB.
+  - **Draco over Meshopt:** model-viewer 4.3 has a working Draco default (decoder from Google's gstatic CDN, fetched only for Draco files). Meshopt has no default decoder location, and setting one needs a script-tag hack. If a CSP/offline need appears: self-host `three/examples/jsm/libs/draco/gltf/` and set `dracoDecoderLocation`.
+- **Build warning:** `chunkSizeWarningLimit: 1100` in `astro.config.mjs` — the only >500 KB chunk is the lazy model-viewer bundle (comment in config).
+- **Placeholder model:** Kenney "Car Kit" `sedan.glb` (CC0, kenney.nl), fetched via GitHub mirror `Arslan12216775/kenney_car-kit` (kenney.nl TLS is blocked on this network). Body-paint swatches in its palette texture recoloured red → white with a one-off script (not kept). Uncompressed source: `assets/models/placeholder-sedan.glb`. Three-box sedan (not a hatchback, §11), but low-poly/toy-like.
+- **Hotspots on the model:** skipped (optional in brief). Positions would be wrong on the placeholder; the Features list covers them. Add with the real model.
+- **Swapping in the real Dzire Tour S:** source at `assets/models/dzire-tour-s.glb` → `npm run models:compress -- assets/models/dzire-tour-s.glb public/models/dzire-tour-s.glb` → set `carModel.src` → regenerate the poster: stage at 1200×900, in the console `el = document.querySelector('model-viewer'); el.removeAttribute('auto-rotate'); el.resetTurntableRotation()`, then save `await el.toBlob({ mimeType: 'image/webp', qualityArgument: 0.85 })` over `public/models/dzire-poster.webp`. Re-check exposure/framing.
+
 ## Open issues
 - `reference/pamphlet.jpg` is **missing** from the project. Needed in Phase 1 for brand color/energy reference.
-- `[TBD: replace with Dzire Tour S model]` — `public/models/dzire-tour-s.glb` not provided yet (Phase 3).
+- **`[TBD: replace with Dzire Tour S model]`** — `public/models/dzire-tour-s.glb` not provided. The site uses a CC0 low-poly white sedan placeholder (`public/models/placeholder-sedan.glb`, 13 KB) and a poster rendered from it. Needed from client: a white Dzire Tour S GLB (or approval to buy a licensed one). Swap steps under "3D car viewer (Phase 3)".
+- AR ("View in your space") untested on a real Android/iOS phone — Phase 7 device check.
 - All BRIEF §10 items remain `[TBD]`.
 - **WhatsApp number `[TBD]`**: is 8296611117 or 9060772111 on WhatsApp? Until confirmed, WhatsApp buttons open WhatsApp without a pre-set recipient.
 - `₹` glyph is not in Anton's latin subset; it renders from the fallback font (looks fine on Windows/Android). Revisit in Phase 7 if it looks off.

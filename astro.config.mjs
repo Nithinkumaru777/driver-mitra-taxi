@@ -25,6 +25,8 @@ export default defineConfig({
     },
   ],
   vite: {
-    plugins: [tailwindcss()]
+    plugins: [tailwindcss()],
+    // model-viewer bundles three.js (~1 MB min, ~285 KB gzip). It's a lazy chunk, imported only when a car stage nears the viewport.
+    build: { chunkSizeWarningLimit: 1100 },
   }
 });

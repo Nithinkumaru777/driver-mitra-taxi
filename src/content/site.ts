@@ -36,6 +36,12 @@ export const mostPopularPlan: PlanYears | null = null;
 
 export const driversOnRoad = TBD;
 
+/** 3D car. [TBD: replace with Dzire Tour S model] — the GLB is a CC0 Kenney sedan recoloured white. Swap steps in PROGRESS.md. */
+export const carModel = {
+  src: '/models/placeholder-sedan.glb',
+  poster: '/models/dzire-poster.webp',
+};
+
 /** Add one entry per driver photo (only with the driver's consent). image: file name in public/drivers/. */
 export const gallery: { image: string | null; name: string; city: string; plan: string; handoverDate: string; quote?: string }[] = [
   { image: null, name: TBD, city: TBD, plan: TBD, handoverDate: TBD },
@@ -95,7 +101,7 @@ const en = {
   },
   car: {
     heading: 'New Dzire Tour S — Daily Rentals',
-    placeholderAlt: 'White Maruti Suzuki Dzire Tour S sedan',
+    posterAlt: 'White Maruti Suzuki Dzire Tour S sedan',
     modelLabel: '3D model of the Maruti Suzuki Dzire Tour S. Drag to rotate.',
     dragHint: 'Drag to rotate 360°',
     arButton: 'View in your space',

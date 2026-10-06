@@ -9,9 +9,11 @@
     "dev": "astro dev",
     "build": "astro build",
     "preview": "astro preview",
-    "astro": "astro"
+    "astro": "astro",
+    "models:compress": "gltf-transform optimize --compress draco --texture-compress webp --texture-size 2048"
   },
   "dependencies": {
+    "@google/model-viewer": "^4.3.1",
     "@lucide/astro": "^1.52.0",
     "@tailwindcss/vite": "^4.3.3",
     "astro": "^7.3.5",
@@ -22,6 +24,7 @@
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.10",
+    "@gltf-transform/cli": "^4.5.1",
     "typescript": "^6.0.3"
   }
 }
