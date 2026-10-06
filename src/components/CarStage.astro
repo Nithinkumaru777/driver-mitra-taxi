@@ -115,15 +115,22 @@ const t = getCopy();
       });
     }
 
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (!entries.some((e) => e.isIntersecting)) return;
-        observer.disconnect();
-        import('@google/model-viewer').catch(() => stages.forEach(fail));
-      },
-      { rootMargin: '300px' },
-    );
-    stages.forEach((s) => observer.observe(s));
+    // The ~285 KB model-viewer bundle (three.js) waits for the visitor's first interaction as well as proximity:
+    // the poster looks the same, and the first load stays free for Call / WhatsApp on slow phones (facade pattern).
+    const firstInput = ['pointerdown', 'pointermove', 'touchstart', 'wheel', 'keydown', 'scroll'];
+    const start = () => {
+      firstInput.forEach((type) => removeEventListener(type, start));
+      const observer = new IntersectionObserver(
+        (entries) => {
+          if (!entries.some((e) => e.isIntersecting)) return;
+          observer.disconnect();
+          import('@google/model-viewer').catch(() => stages.forEach(fail));
+        },
+        { rootMargin: '300px' },
+      );
+      stages.forEach((s) => observer.observe(s));
+    };
+    firstInput.forEach((type) => addEventListener(type, start, { passive: true }));
 
     // Scroll-linked orbit (full tier only): the camera turns while auto-rotate keeps spinning the model on top.
     if (tier === 'full') {
