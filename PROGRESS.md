@@ -8,7 +8,7 @@
 | 1. Design system & content | ✅ Done (awaiting review) | Tokens, fonts, Lucide, Checkered/Button/Card/Badge, `src/content/site.ts`, `/styleguide` |
 | 2. All sections (static) | ✅ Done (awaiting review) | 12 sections in `src/components/sections/`; verified 360/768/1440 |
 | 3. 3D car viewer | ✅ Done (awaiting review) | `<model-viewer>` in both car stages; CC0 placeholder sedan (13 KB GLB) — `[TBD: replace with Dzire Tour S model]` |
-| 4. Driver gallery | ⏳ Not started | |
+| 4. Driver gallery | ✅ Done (awaiting review) | `npm run drivers` (sharp → AVIF+WebP ×4 widths, EXIF/GPS stripped); grid + `<dialog>` lightbox; 4 neutral placeholders with `[TBD]` captions |
 | 5. Motion | ⏳ Not started | |
 | 6. Form, SEO, integrations | ⏳ Not started | |
 | 7. QA & polish | ⏳ Not started | |
@@ -142,10 +142,20 @@ Format: skill → phase(s) used, or "not relevant".
 - **Hotspots on the model:** skipped (optional in brief). Positions would be wrong on the placeholder; the Features list covers them. Add with the real model.
 - **Swapping in the real Dzire Tour S:** source at `assets/models/dzire-tour-s.glb` → `npm run models:compress -- assets/models/dzire-tour-s.glb public/models/dzire-tour-s.glb` → set `carModel.src` → regenerate the poster: stage at 1200×900, in the console `el = document.querySelector('model-viewer'); el.removeAttribute('auto-rotate'); el.resetTurntableRotation()`, then save `await el.toBlob({ mimeType: 'image/webp', qualityArgument: 0.85 })` over `public/models/dzire-poster.webp`. Re-check exposure/framing.
 
+### Driver gallery (Phase 4)
+- **Pipeline:** `npm run drivers` = `scripts/drivers.mjs`. Every photo in `assets/drivers-original/` → `public/drivers/<name>-{320,640,960,1280}.{avif,webp}` (AVIF q50, WebP q75). `.rotate()` bakes in EXIF orientation; sharp drops all metadata by default, and the script **re-reads each output and throws if EXIF/XMP/IPTC is present**. `public/drivers/` is wiped and rebuilt each run so removed photos don't stay online. Widths live in `site.ts` (`driverPhotoWidths`) and are shared by the script (Node 24 type stripping imports `.ts` directly) and the component. `sharp` is now a direct devDependency (it was only transitive via Astro).
+- **Privacy:** `assets/drivers-original/*` is gitignored (originals carry GPS); only stripped outputs are committed. Exception: `placeholder-*.jpg`, which are generated.
+- **Placeholders:** 4 neutral brand-tint silhouettes (no text, so nothing to translate) with `[TBD]` captions and alt "Photo coming soon". Each placeholder original contains fake camera + GPS EXIF, and #2 is stored sideways with Orientation 6. Verified: outputs have no EXIF, no camera strings, and #2 comes out upright at 640×800.
+- **Grid:** `<picture>` AVIF → WebP, `srcset` at 4 widths, `sizes` matched to the 2/4-column grid, lazy. Each card is a `<button>` whose name is the image alt. **Build fails with a clear message** if a `gallery` entry has no generated photo (forgot `npm run drivers`).
+- **Lightbox:** native `<dialog>` + `showModal()` gives a focus trap, Esc to close, and focus return. It clones the grid's `<picture>` and caption (no duplicated data) with `sizes="100vw"`. ←/→ keys, prev/next buttons, wrap-around, one-finger swipe ≥50px (pinch ignored), tap on the empty area closes, page scroll locked while open, caption `aria-live`.
+- **Verified (Playwright):** 360 touch: tap opens, swipe left/right navigates, Esc closes. 1440 keyboard: Enter opens, focus lands on Close, arrows wrap, Esc returns focus to the card. Adding a photo plus one `gallery` entry showed a 5th card with the correct alt/caption/quote (test reverted). No horizontal scroll, no page errors, `astro check` and build clean.
+- **Deferred to Phase 5 (§7):** counter count-up, staggered reveal, hover zoom + caption slide-up, shared-element expand into the lightbox.
+
 ## Open issues
 - `reference/pamphlet.jpg` is **missing** from the project. Needed in Phase 1 for brand color/energy reference.
 - **`[TBD: replace with Dzire Tour S model]`** — `public/models/dzire-tour-s.glb` not provided. The site uses a CC0 low-poly white sedan placeholder (`public/models/placeholder-sedan.glb`, 13 KB) and a poster rendered from it. Needed from client: a white Dzire Tour S GLB (or approval to buy a licensed one). Swap steps under "3D car viewer (Phase 3)".
 - AR ("View in your space") untested on a real Android/iOS phone — Phase 7 device check.
 - All BRIEF §10 items remain `[TBD]`.
+- **Driver photos + consent `[TBD]`**: the gallery shows 4 neutral placeholders. `driversOnRoad` count `[TBD]`. Alt text pattern says "his" (BRIEF §8). Make it gender-aware if any driver is not male.
 - **WhatsApp number `[TBD]`**: is 8296611117 or 9060772111 on WhatsApp? Until confirmed, WhatsApp buttons open WhatsApp without a pre-set recipient.
 - `₹` glyph is not in Anton's latin subset; it renders from the fallback font (looks fine on Windows/Android). Revisit in Phase 7 if it looks off.

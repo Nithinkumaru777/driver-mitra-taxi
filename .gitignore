@@ -25,3 +25,8 @@ pnpm-debug.log*
 
 # browser QA screenshots
 .playwright-mcp/
+
+# Driver photo originals carry EXIF/GPS. Never commit them: only the stripped
+# outputs in public/drivers/ are published. Placeholders are generated, not personal.
+assets/drivers-original/*
+!assets/drivers-original/placeholder-*

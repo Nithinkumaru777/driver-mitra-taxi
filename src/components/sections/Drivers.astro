@@ -1,10 +1,22 @@
 ---
-// Static grid. Phase 4 adds the image pipeline (srcset) and the lightbox.
-import { Camera } from '@lucide/astro';
+// Photo grid + lightbox. Photos come from `npm run drivers` (scripts/drivers.mjs).
+import { existsSync } from 'node:fs';
+import { ChevronLeft, ChevronRight, X } from '@lucide/astro';
 import Badge from '../ui/Badge.astro';
-import { getCopy, gallery, driversOnRoad } from '../../content/site';
+import { getCopy, gallery, driversOnRoad, driverPhotoWidths, TBD } from '../../content/site';
 
 const t = getCopy();
+const lb = t.drivers.lightbox;
+
+for (const d of gallery) {
+  if (!existsSync(`public/drivers/${d.image}-640.webp`))
+    throw new Error(`Driver photo "${d.image}" is missing. Put it in assets/drivers-original/ and run: npm run drivers`);
+}
+
+const srcset = (image: string, format: string) =>
+  driverPhotoWidths.map((w) => `/drivers/${image}-${w}.${format} ${w}w`).join(', ');
+// 2 columns on mobile, 4 from md; the container caps at 72rem.
+const sizes = '(min-width: 1152px) 270px, (min-width: 768px) 23vw, 46vw';
 ---
 
 <section id="our-drivers" class="bg-royal-tint py-16 md:py-24">
@@ -16,23 +28,25 @@ const t = getCopy();
       </div>
       <Badge class="self-start px-4 py-2 text-xl md:shrink-0 md:self-auto">{t.drivers.counter(driversOnRoad)}</Badge>
     </div>
-    <ul class="mt-10 grid grid-cols-2 gap-4 md:grid-cols-4 md:gap-6">
-      {gallery.map((d) => (
+    <ul data-gallery class="mt-10 grid grid-cols-2 gap-4 md:grid-cols-4 md:gap-6">
+      {gallery.map((d, i) => (
         <li>
           <figure>
-            {d.image ? (
-              <img
-                src={`/drivers/${d.image}`}
-                alt={t.drivers.alt(d.name, d.city)}
-                loading="lazy"
-                class="aspect-[4/5] w-full rounded-card object-cover"
-              />
-            ) : (
-              <div class="grid aspect-[4/5] place-content-center justify-items-center gap-2 rounded-card border-2 border-dashed border-royal/30 bg-white p-3 text-center text-ink-muted">
-                <Camera size={32} aria-hidden="true" />
-                <span class="text-sm">{t.drivers.photoComing}</span>
-              </div>
-            )}
+            <button type="button" data-index={i} aria-haspopup="dialog" class="block w-full overflow-hidden rounded-card">
+              <picture>
+                <source type="image/avif" srcset={srcset(d.image, 'avif')} sizes={sizes} />
+                <source type="image/webp" srcset={srcset(d.image, 'webp')} sizes={sizes} />
+                <img
+                  src={`/drivers/${d.image}-640.webp`}
+                  alt={d.name === TBD ? t.drivers.photoComing : t.drivers.alt(d.name, d.city)}
+                  width="640"
+                  height="800"
+                  loading="lazy"
+                  decoding="async"
+                  class="aspect-[4/5] w-full object-cover"
+                />
+              </picture>
+            </button>
             <figcaption class="mt-3">
               <p class="font-semibold">{d.name}, {d.city}</p>
               <p class="text-sm text-ink-muted">{d.plan} | {d.handoverDate}</p>
@@ -43,4 +57,93 @@ const t = getCopy();
       ))}
     </ul>
   </div>
+
+  <dialog
+    data-lightbox
+    aria-label={t.drivers.heading}
+    data-surface="dark"
+    class="m-0 h-dvh max-h-none w-screen max-w-none bg-ink text-white backdrop:bg-transparent"
+  >
+    <div class="grid h-full grid-rows-[auto_1fr_auto]">
+      <div class="flex justify-end p-3">
+        <button type="button" data-close aria-label={lb.close} class="grid size-12 place-content-center rounded-full hover:bg-white/10">
+          <X size={28} aria-hidden="true" />
+        </button>
+      </div>
+      <div data-stage class="flex min-h-0 items-center justify-center px-4"></div>
+      <div class="container-page flex items-center justify-between gap-4 py-4">
+        <button type="button" data-prev aria-label={lb.previous} class="grid size-12 shrink-0 place-content-center rounded-full bg-white/10 hover:bg-white/20">
+          <ChevronLeft size={28} aria-hidden="true" />
+        </button>
+        <div data-caption aria-live="polite" class="text-center"></div>
+        <button type="button" data-next aria-label={lb.next} class="grid size-12 shrink-0 place-content-center rounded-full bg-white/10 hover:bg-white/20">
+          <ChevronRight size={28} aria-hidden="true" />
+        </button>
+      </div>
+    </div>
+  </dialog>
 </section>
+
+<style>
+  /* Cloned grid captions use text-ink-muted; on the dark lightbox inherit white instead. */
+  [data-caption] :global(*) {
+    color: inherit;
+  }
+  :global(html:has([data-lightbox][open])) {
+    overflow: hidden;
+  }
+</style>
+
+<script>
+  // Native <dialog>: focus trap, Esc to close and focus return come for free.
+  const dialog = document.querySelector<HTMLDialogElement>('[data-lightbox]')!;
+  const stage = dialog.querySelector<HTMLElement>('[data-stage]')!;
+  const caption = dialog.querySelector<HTMLElement>('[data-caption]')!;
+  const figures = [...document.querySelectorAll<HTMLElement>('[data-gallery] figure')];
+  let index = 0;
+
+  // Reuse the grid's <picture> (same srcset, already-cached files) instead of duplicating the data.
+  const show = (i: number) => {
+    index = (i + figures.length) % figures.length;
+    const picture = figures[index].querySelector('picture')!.cloneNode(true) as HTMLElement;
+    picture.className = 'contents';
+    picture.querySelectorAll('source, img').forEach((el) => el.setAttribute('sizes', '100vw'));
+    const img = picture.querySelector('img')!;
+    img.loading = 'eager';
+    img.className = 'size-auto max-h-full max-w-full rounded-card';
+    stage.replaceChildren(picture);
+    caption.replaceChildren(...figures[index].querySelector('figcaption')!.cloneNode(true).childNodes);
+  };
+
+  document.querySelector('[data-gallery]')!.addEventListener('click', (e) => {
+    const button = (e.target as Element).closest<HTMLElement>('[data-index]');
+    if (!button) return;
+    show(Number(button.dataset.index));
+    dialog.showModal();
+  });
+
+  dialog.querySelector('[data-prev]')!.addEventListener('click', () => show(index - 1));
+  dialog.querySelector('[data-next]')!.addEventListener('click', () => show(index + 1));
+  dialog.querySelector('[data-close]')!.addEventListener('click', () => dialog.close());
+  // Tap on the empty area around the photo closes it.
+  dialog.addEventListener('click', (e) => {
+    if (e.target === dialog || e.target === stage) dialog.close();
+  });
+  dialog.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowLeft') show(index - 1);
+    if (e.key === 'ArrowRight') show(index + 1);
+  });
+
+  // Swipe: one-finger horizontal drag of 50px+. Multi-touch (pinch zoom) is ignored.
+  let x0 = NaN;
+  let y0 = NaN;
+  stage.addEventListener('touchstart', (e) => {
+    [x0, y0] = e.touches.length === 1 ? [e.touches[0].clientX, e.touches[0].clientY] : [NaN, NaN];
+  }, { passive: true });
+  stage.addEventListener('touchend', (e) => {
+    const dx = e.changedTouches[0].clientX - x0;
+    const dy = e.changedTouches[0].clientY - y0;
+    if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy)) show(index + (dx < 0 ? 1 : -1));
+    x0 = NaN;
+  });
+</script>

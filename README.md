@@ -1,3 +1,19 @@
+# Driver Mitra Taxi website
+
+> Full handover guide comes in Phase 8. Until then, the essentials below.
+
+## Adding a driver photo
+
+> **Only add photos of drivers who have given consent to appear on the website.**
+
+1. Put the photo in `assets/drivers-original/` (e.g. `ramesh.jpg`). It stays on your computer; it is never uploaded to git.
+2. Run `npm run drivers`. This makes small WebP + AVIF versions in `public/drivers/`, turns them the right way up, and removes all hidden data (camera, date, GPS location).
+3. Add one line to `gallery` in `src/content/site.ts`:
+   `{ image: 'ramesh', name: 'Ramesh', city: 'Bengaluru', plan: '3 Years Flexible Plan', handoverDate: 'March 2026' },`
+4. Delete the `placeholder-*` lines (and their files in `assets/drivers-original/`) once real photos are in, then run `npm run drivers` again.
+
+---
+
 # Astro Starter Kit: Minimal
 
 ```sh
