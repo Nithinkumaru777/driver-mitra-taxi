@@ -1,0 +1,42 @@
+{
+  "model": "Maruti Suzuki Dzire (4th generation, Nov 2024)",
+  "trimToModel": "Mid/base (VXI-level) as seen in photos: R14 steel wheels with full covers, halogen projector headlamps, no DRL strip, no fog lamps, no sunroof",
+  "colour": { "name": "Arctic White", "type": "solid with gloss clearcoat", "hex": "#F2F3F0" },
+  "units": "metres",
+  "dimensions": {
+    "length": 3.995,
+    "width": 1.735,
+    "height": 1.525,
+    "wheelbase": 2.45,
+    "groundClearance": 0.163,
+    "trackFront_estimate": 1.52,
+    "trackRear_estimate": 1.52,
+    "frontOverhang_estimate": 0.73,
+    "rearOverhang_estimate": 0.815,
+    "turningRadius": 4.8
+  },
+  "tyre": { "size": "165/80 R14", "outerDiameter": 0.62, "width": 0.165, "rimDiameter": 0.356 },
+  "drive": "Right-hand drive (India)",
+  "seating": 5,
+  "bootSpaceLitres": 382,
+  "engine": { "type": "Z12E 1.2L 3-cyl petrol", "cc": 1197, "fuel": ["Petrol", "Petrol + CNG (bi-fuel)"] },
+  "powerPetrol": "60 kW / 81.58 PS @ 5700 rpm",
+  "powerCNG": "51.3 kW / 69.75 PS @ 5700 rpm",
+  "torquePetrol": "111.7 Nm @ 4300 rpm",
+  "torqueCNG": "101.8 Nm @ 2900 rpm",
+  "transmission": { "petrol": "5MT / 5AMT", "cng": "5MT" },
+  "fuelEfficiency": { "petrolMT": "24.79 km/l", "petrolAMT": "25.71 km/l", "cng": "33.73 km/kg" },
+  "fuelTank": { "petrolL": 37, "cngL_waterEquivalent": 55 },
+  "safety": ["6 airbags standard", "ESP", "Hill Hold Assist", "ABS with EBD", "Reverse parking sensors", "ISOFIX", "3-point seat belts all seats"],
+  "photos": {
+    "01-rear-three-quarter-left.jpg": "Rear 3/4 from the car's left: tail lamps, black garnish with chrome strip, boot lip spoiler, shark fin, rear bumper sensors",
+    "02-front-three-quarter-left.jpg": "Front 3/4 from the car's left: fascia, headlamp wrap, hood, mirror, side surfacing",
+    "03-side-profile-right.jpg": "Right (driver) side profile: silhouette, window line, shoulder crease, wheel covers, proportions",
+    "04-side-profile-left.jpg": "Left side profile: fuel lid on rear quarter, door handles, wheel covers",
+    "05-front-straight-lights-off.jpg": "Front elevation: grille, upper black bar, red accent line, corner inserts",
+    "06-front-straight-lights-on.jpg": "Front elevation with projector headlamps lit",
+    "07-front-straight-lights-on-2.jpg": "Front elevation lit, slightly lower angle",
+    "08-front-wide-lights-on.jpg": "Front wide view lit: full fascia width",
+    "09-interior-dashboard.jpg": "Interior: dual-tone black/beige dash, floating touchscreen, RHD steering, manual gear lever"
+  }
+}

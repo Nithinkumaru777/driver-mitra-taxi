@@ -30,3 +30,8 @@ pnpm-debug.log*
 # outputs in public/drivers/ are published. Placeholders are generated, not personal.
 assets/drivers-original/*
 !assets/drivers-original/placeholder-*
+
+# Maruti Suzuki brochure is copyrighted: modelling reference only, never publish.
+reference/dzire-3d/brochure/
+# Blender scratch output
+tools/model/out/

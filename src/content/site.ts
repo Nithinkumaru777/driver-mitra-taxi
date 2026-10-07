@@ -36,9 +36,9 @@ export const mostPopularPlan: PlanYears | null = null;
 
 export const driversOnRoad = TBD;
 
-/** 3D car. [TBD: replace with Dzire Tour S model] — the GLB is a CC0 Kenney sedan recoloured white. Swap steps in PROGRESS.md. */
+/** 3D car: built by tools/model/build_car.py (Blender), compressed with `npm run models:compress`. Swap steps in README §6. */
 export const carModel = {
-  src: '/models/placeholder-sedan.glb',
+  src: '/models/dzire-tour-s.glb',
   poster: '/models/dzire-poster.webp',
 };
 

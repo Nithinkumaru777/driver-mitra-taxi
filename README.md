@@ -152,7 +152,7 @@ The ₹10,000 booking amount appears in many places in the wording (headline, st
 
 ## 6. Replace the 3D car model
 
-The site currently shows a simple stand-in sedan. Here is how to swap in the real white **Dzire Tour S** model. It must be the sedan, never a hatchback. You need the model as a **`.glb` file**, from a 3D artist or a licensed model you've bought.
+The site shows a white **Dzire Tour S** model built by a script (`tools/model/build_car.py`, needs Blender). It's a clean, simplified look-alike, not a photo-real scan. If you later get a more detailed model from a 3D artist or buy a licensed one, here is how to swap it in. It must be the sedan, never a hatchback, and you need it as a **`.glb` file**.
 
 1. Name the file `dzire-tour-s.glb` and put it in `assets/models/`.
 

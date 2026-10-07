@@ -10,7 +10,7 @@
     "build": "astro build",
     "preview": "astro preview",
     "astro": "astro",
-    "models:compress": "gltf-transform optimize --compress draco --texture-compress webp --texture-size 2048",
+    "models:compress": "gltf-transform optimize --compress draco --texture-compress webp --texture-size 1024 --flatten false --join false --simplify false --palette false",
     "drivers": "node scripts/drivers.mjs",
     "icons": "node scripts/icons.mjs",
     "test": "node --test scripts/*.test.ts"

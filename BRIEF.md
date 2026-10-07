@@ -6,6 +6,44 @@
 
 ---
 
+## Input files: in the user's Downloads folder
+
+The user has downloaded these files to their **Downloads** folder:
+- Windows: `C:\Users\<username>\Downloads\` (in PowerShell: `$env:USERPROFILE\Downloads`)
+- macOS / Linux: `~/Downloads/`
+
+| File in Downloads | What it is | Copy / extract to (inside the project) |
+|---|---|---|
+| `dzire-3d-reference-pack.zip` | 3D car reference pack: 9 renamed photos, the official Dzire brochure, `specs.json`, and `DZIRE_3D_MODEL_BRIEF.md` | Extract into `reference/dzire-3d/` |
+| `DRIVER_MITRA_BUILD_BRIEF.md` | This brief | Copy to the project root as `BRIEF.md` |
+| Client pamphlet image (if present) | Brand reference only | Copy to `reference/pamphlet.jpg` |
+| Driver handover photos (when the client sends them) | Gallery photos | Copy to `assets/drivers-original/` |
+
+**Claude Code: do this first, in Phase 0:**
+1. Find `dzire-3d-reference-pack.zip` in the Downloads folder. If the browser renamed it (e.g. `dzire-3d-reference-pack (1).zip`), use the newest one.
+2. Extract it into `reference/dzire-3d/`, so the files sit directly in that folder (`reference/dzire-3d/DZIRE_3D_MODEL_BRIEF.md`, `reference/dzire-3d/photos/…`, `reference/dzire-3d/brochure/…`, `reference/dzire-3d/specs.json`), **not** in an extra nested `dzire-3d-reference-pack/` folder.
+3. Verify the extract: **9 photos** in `photos/`, **2 files** in `brochure/`, plus `specs.json` and `DZIRE_3D_MODEL_BRIEF.md`.
+4. **Fallback:** if the pack isn't there but the user's original `vehical_image.zip` is, extract that to `reference/dzire-3d/raw/` and rename the photos into `reference/dzire-3d/photos/` using this map:
+
+   | Original file | Rename to |
+   |---|---|
+   | `0553872e-….jpg` | `01-rear-three-quarter-left.jpg` |
+   | `156ac3c5-….jpg` | `02-front-three-quarter-left.jpg` |
+   | `190400b7-….jpg` | `03-side-profile-right.jpg` |
+   | `72768d29-….jpg` | `04-side-profile-left.jpg` |
+   | `8257a8e9-….jpg` | `05-front-straight-lights-off.jpg` |
+   | `936b62e5-….jpg` | `06-front-straight-lights-on.jpg` |
+   | `f6a519cd-….jpg` | `07-front-straight-lights-on-2.jpg` |
+   | `ea54e2f7-….jpg` | `08-front-wide-lights-on.jpg` |
+   | `e5cc2bc3-….jpg` | `09-interior-dashboard.jpg` |
+
+   Move the brochure PDF to `reference/dzire-3d/brochure/`. Then tell the user that `DZIRE_3D_MODEL_BRIEF.md` and `specs.json` are missing and ask them to download the pack.
+5. If neither zip is found, **stop and ask the user** where the files are. Don't continue Phase 3 without the reference pack.
+6. Add `reference/` to the repo, but add `reference/dzire-3d/brochure/` to `.gitignore` if the repo will ever be public (it's Maruti Suzuki's copyrighted brochure).
+7. Log what was found and where it was extracted in `PROGRESS.md`.
+
+---
+
 ## 0. Roles and working rules
 
 ### Antigravity (orchestrator)
@@ -114,7 +152,7 @@ The pamphlet image is at `reference/pamphlet.jpg`. Use it **only** as a referenc
    2. Get your Dzire Tour S
    3. Drive anywhere & pay daily rental
    4. Complete your plan & own the car
-5. **Our Car: 3D showcase.** Heading "New Dzire Tour S — Daily Rentals". Large 3D viewer, plus a spec list with placeholders (fuel type, seating, mileage, boot space: `[TBD]`). Optional 3–4 hotspots on the model (e.g. "Spacious boot", "CNG option", "Comfortable rear seats") with `[TBD]` text.
+5. **Our Car: 3D showcase.** Heading "New Dzire Tour S — Daily Rentals". Large 3D viewer, plus a spec list taken from `reference/dzire-3d/specs.json`: 1.2L petrol / petrol + CNG, 33.73 km/kg CNG mileage, 5 seats, 382 L boot, 6 airbags standard, 163 mm ground clearance. Ask the client to confirm whether their cars are CNG; mark it `[TBD: confirm]` until they do. Add 3–4 hotspots on the model: "382 L boot", "CNG: 33.73 km/kg", "6 airbags standard", "Comfortable rear seats".
 6. **Plans:** heading "Buy Your Own Car Today". Three cards: 3 / 4 / 5 Years Flexible Plan, each showing "Daily rent: ₹[TBD]" and an **Enquire** button that scrolls to the form with that plan pre-selected. Highlight one card as "Most Popular `[TBD]`" only if the client confirms; leave a config flag for it.
 7. **Our Drivers: handover gallery.** Heading "Happy Drivers, New Cars"; subline "Real drivers who received their car from Driver Mitra". A counter "`[TBD]`+ drivers on the road". Responsive grid (2 columns mobile, 3–4 desktop). Each item: photo, first name, city, plan, handover month/year, optional short quote. Click opens a lightbox with swipe and arrow navigation.
 8. **Company Benefits:** Education Insurance Benefits · Health Insurance Benefits · For Driver and His Family. CTA "Join Driver Mitra — Get All Benefits".
@@ -135,6 +173,7 @@ The pamphlet image is at `reference/pamphlet.jpg`. Use it **only** as a referenc
 
 ## 6. 3D car viewer
 
+- **The 3D model itself is built from `reference/dzire-3d/DZIRE_3D_MODEL_BRIEF.md`.** That folder has the 9 real photos of the car, the official brochure, and `specs.json`. Read all of it before Phase 3. The car is the **white (Arctic White) 4th-generation Maruti Suzuki Dzire**, at the trim shown in the photos.
 - Use **Google `<model-viewer>`**. It's the lightest way to get auto-rotate, drag-to-rotate, zoom, shadows and AR. Use three.js only if a specific effect needs it.
 - **Model file:** `public/models/dzire-tour-s.glb` (white Maruti Suzuki Dzire Tour S sedan). If it's missing, use a free generic car GLB placeholder and log `[TBD: replace with Dzire Tour S model]` in `PROGRESS.md`. Don't block the build.
 - **Behaviour:**
@@ -188,10 +227,11 @@ Use every installed motion/animation skill. Recommended stack: **GSAP + ScrollTr
 ## 9. Build phases (Antigravity: issue these one at a time)
 
 ### Phase 0: Setup and skill discovery
+- Bring in the input files from the Downloads folder (see "Input files" at the top), including extracting `dzire-3d-reference-pack.zip` into `reference/dzire-3d/`.
 - Discover and list all skills (Section 1) in `PROGRESS.md`.
 - Choose the stack. Recommended: **Astro + Tailwind CSS + GSAP + model-viewer** (static output, very fast, free hosting). Justify any deviation.
 - Scaffold the project, with `BRIEF.md`, `CLAUDE.md`, `PROGRESS.md`, and git initialised.
-- ✅ **Accept when:** dev server runs; skills list is written; stack decision is recorded.
+- ✅ **Accept when:** `reference/dzire-3d/` holds all pack files (9 photos, brochure, `specs.json`, `DZIRE_3D_MODEL_BRIEF.md`); dev server runs; skills list is written; stack decision is recorded.
 
 ### Phase 1: Design system and content
 - Design tokens (colors, type scale, spacing, radii, shadows), fonts, icon set, checkered pattern component, button/card/badge components.
@@ -202,8 +242,9 @@ Use every installed motion/animation skill. Recommended stack: **GSAP + ScrollTr
 - Build sections 1–12 from Section 5, fully responsive.
 - ✅ **Accept when:** screenshots at 360 / 768 / 1440 look polished with no overflow or horizontal scroll; all `tel:` and WhatsApp links work; the mobile sticky bar and floating button don't cover content.
 
-### Phase 3: 3D car viewer
-- Implement Section 6 completely, including poster, lazy load, loader, fallback, AR, and the compression script.
+### Phase 3: 3D car model + viewer
+- **3a.** Build the GLB by following `reference/dzire-3d/DZIRE_3D_MODEL_BRIEF.md` step by step, including the side-by-side photo comparison rounds. Antigravity reviews the comparison renders in `tools/model/compare/` before moving on.
+- **3b.** Implement Section 6 completely, including poster, lazy load, loader, fallback, AR, and the compression script.
 - ✅ **Accept when:** the car auto-rotates, can be dragged and zoomed, pauses and resumes correctly, and falls back to the poster with WebGL disabled; the GLB is under 5 MB or a `[TBD]` note explains why.
 
 ### Phase 4: Driver gallery
