@@ -7,8 +7,7 @@
 | 0. Setup & skill discovery | ✅ Done (awaiting review) | Astro scaffolded, Tailwind wired, dev server runs, git initialised. 2026-10-07: `dzire-3d-reference-pack.zip` extracted to `reference/dzire-3d/` (9 photos, 2 brochure files, `specs.json`, `DZIRE_3D_MODEL_BRIEF.md`); updated brief copied to `BRIEF.md`; brochure gitignored (copyright) |
 | 1. Design system & content | ✅ Done (awaiting review) | Tokens, fonts, Lucide, Checkered/Button/Card/Badge, `src/content/site.ts`, `/styleguide` |
 | 2. All sections (static) | ✅ Done (awaiting review) | 12 sections in `src/components/sections/`; verified 360/768/1440 |
-| 3a. Dzire GLB build | ✅ Done (awaiting review) | Blender 5.2 via `python tools/model/compare.py` (runs `tools/model/build_car.py`); 3 compare rounds, renders in `tools/model/compare/`. Round 3: boxy mirrors moved onto the door, inset garnish chrome, taller spoiler, generic oval badges, DRIVER MITRA plates (geometry text), C-pillar black surround, defogger + HMSL, panel gaps, fuel lid, bumper lines + 4 sensors. 42.6k tris → 140 KB Draco GLB, validator 0 errors / 0 warnings |
-| 3b. 3D car viewer | ✅ Done (awaiting review) | `<model-viewer>` in both car stages showing `public/models/dzire-tour-s.glb`; poster recaptured front-left (photo 02 angle); placeholder sedan deleted |
+| 3. 3D car (Gaussian splat) | ✅ Done (awaiting review), **[TBD: splat scan]** | 2026-10-07 rework: procedural GLB + model-viewer removed; Spark (three.js) splat viewer with photo-poster fallback, all behaviours + hotspots verified with a sample splat; `npm run splats` (≤ 10 / ≤ 5 MB). Scan file not delivered yet, so the site shows the real photo |
 | 4. Driver gallery | ✅ Done (awaiting review) | `npm run drivers` (sharp → AVIF+WebP ×4 widths, EXIF/GPS stripped); grid + `<dialog>` lightbox; 4 neutral placeholders with `[TBD]` captions |
 | 5. Motion | ✅ Done (awaiting review) | All 8 §7 moments; 3 motion tiers; no jank at 4× CPU throttle (p95 frame 11 ms, 0 long tasks); success checkmark deferred to Phase 6 |
 | 6. Form, SEO, integrations | ✅ Done (awaiting review) | Form validation + wa.me hand-off + plan pre-select; full SEO head, LocalBusiness JSON-LD (schema.org validator: 0 errors, 0 warnings), sitemap, robots, favicon set, manifest |
@@ -21,8 +20,8 @@
 - **Astro 7** (static output) — zero JS by default; only islands we opt into ship JS. Best fit for slow 4G / low-end Android.
 - **Tailwind CSS v4** via `@tailwindcss/vite` — design tokens live as CSS variables in `src/styles/global.css` (`@theme`), no `tailwind.config.js` needed in v4.
 - **GSAP + ScrollTrigger + Lenis** — added in Phase 5.
-- **`@google/model-viewer`** — added in Phase 3, lazy-loaded.
-- **`sharp`** (Phase 4 image pipeline), **`@gltf-transform/cli`** (Phase 3 GLB compression) — added in their phases.
+- **`@sparkjsdev/spark` + `three`**: Phase 3 splat viewer (replaced `@google/model-viewer` in the 2026-10-07 rework), lazy-loaded.
+- **`sharp`** (Phase 4 image pipeline), **`@playcanvas/splat-transform`** (Phase 3 splat compression) — added in their phases.
 - **Icons:** Lucide (decided now, installed in Phase 1).
 - **No React/Framer Motion:** BRIEF §7 motion is fully covered by GSAP + CSS; adding React only for hover states would cost ~45 KB+ on every page. Global CLAUDE.md suggests Framer Motion/R3F/React Bits — BRIEF wins on stack (§0.5) and on performance (§11). Revisit only if the user asks.
 - **Hosting:** static `dist/` → Netlify or Vercel (Phase 8).
@@ -49,7 +48,7 @@ Format: skill → phase(s) used, or "not relevant".
 - No dedicated GSAP / Lenis / motion skill installed. → **Gap**: Phase 5 uses GSAP docs via Context7 + `frontend-design` motion guidance.
 
 ### 3D / WebGL
-- No dedicated three.js / model-viewer skill installed. → **Gap**: Phase 3 uses model-viewer docs via Context7.
+- No dedicated three.js / Gaussian-splat skill installed. → **Gap**: Phase 3 uses the Spark + splat-transform docs shipped in their npm packages, plus three.js source.
 - Blender-MCP / TripoSR (global CLAUDE.md) → not relevant unless we must build a Dzire GLB ourselves; would need user approval.
 
 ### Website / web app building
@@ -127,23 +126,28 @@ Format: skill → phase(s) used, or "not relevant".
 - **Deferred by phase:** 3D viewer (3), image pipeline + lightbox (4), marquee/counters/all motion (5).
 - Gotcha: `Button`/`Badge` merge caller classes after their own, but Tailwind resolves conflicting utilities by stylesheet order, not class order — wrap the component instead of overriding `display`/margins (hit on header Call Now `hidden`).
 
-### 3D car viewer (Phase 3)
-- **Component:** `src/components/CarStage.astro` (Hero with `eager`, and Our Car). Model + poster paths: `carModel` in `site.ts`.
-- **Load order:** poster `<img>` renders instantly (hero: `fetchpriority=high`). The `model-viewer` JS (~285 KB gzip, includes three.js) is a lazy chunk, `import()`ed only when a stage is within 300px of the viewport **and** WebGL2 exists. Each viewer has `loading="lazy"`, so the Our Car one waits until visible. Poster fades out on `load`.
-- **Fallback:** no WebGL2 → JS never downloads, poster stays. GLB/JS load error → `data-state="error"`, viewer removed, poster stays. Verified in Playwright (WebGL stubbed out; GLB routed to 404).
-- **Behaviour = native model-viewer attributes:** `auto-rotate` 25°/s, pauses on interaction, resumes after `auto-rotate-delay=3000`; `camera-controls`, `disable-pan`, polar limits 40°–88° (no under-floor view), default zoom limits; `environment-image="neutral"`, `exposure=0.8` (white body washed out on the pale stage at 1.0), soft contact shadow. Measured: 801.6° → 826.8° in 1 s; frozen 2 s after a drag; rotating again ~3.5 s after.
-- **Hint chip** "Drag to rotate 360°" shows once the model is ready, fades on the first `camera-change` with `source === 'user-interaction'`. model-viewer's hand prompt is off.
-- **AR:** `ar ar-modes="webxr scene-viewer quick-look"` + "View in your space" button in the `ar-button` slot (model-viewer only shows it where AR can launch). iOS Quick Look uses model-viewer's auto-generated USDZ.
-- **Reduced motion:** `auto-rotate` removed before model-viewer upgrades (verified). Scroll-linked rotation + low-end-device checks are Phase 5.
-- **Loader:** royal progress bar (`role="progressbar"`, `aria-valuenow`) driven by model-viewer's `progress` event; hidden on ready/error.
-- **Compression:** `npm run models:compress -- <in.glb> <out.glb>` = `gltf-transform optimize --compress draco --texture-compress webp --texture-size 1024 --flatten false --join false --simplify false --palette false`. Dzire: 1.2 MB → 140 KB.
-  - **Why the `false` flags:** optimize's defaults flattened + joined the Dzire into 5 nodes (wheels lost their hub pivots, named parts merged), simplified 42.6k → 25.9k tris and baked materials into palette textures. With them off: 48 nodes, 4 wheel pivots at the hubs, geometry intact (36.3k tris on disk = wheels GPU-instanced).
-  - **Draco over Meshopt:** model-viewer 4.3 has a working Draco default (decoder from Google's gstatic CDN, fetched only for Draco files). Meshopt has no default decoder location, and setting one needs a script-tag hack. If a CSP/offline need appears: self-host `three/examples/jsm/libs/draco/gltf/` and set `dracoDecoderLocation`.
-- **Build warning:** `chunkSizeWarningLimit: 1100` in `astro.config.mjs` — the only >500 KB chunk is the lazy model-viewer bundle (comment in config).
-- **Model:** `tools/model/build_car.py` → `assets/models/dzire-tour-s.glb` (source, committed) → `npm run models:compress` → `public/models/dzire-tour-s.glb`. The CC0 Kenney placeholder was deleted.
-- **Hotspots on the model:** skipped (optional in brief); the Features list covers them.
-- **Initial orbit `35deg`** (was `-35deg`, front-right): the brief's poster is front-left like photo 02, and the viewer's first frame must match the poster. Scroll orbit still turns it to the side, then the rear.
-- **Swapping in the real Dzire Tour S:** source at `assets/models/dzire-tour-s.glb` → `npm run models:compress -- assets/models/dzire-tour-s.glb public/models/dzire-tour-s.glb` → set `carModel.src` → regenerate the poster: stage at 1200×900, in the console `el = document.querySelector('model-viewer'); el.removeAttribute('auto-rotate'); el.resetTurntableRotation()`, then save `await el.toBlob({ mimeType: 'image/webp', qualityArgument: 0.85 })` over `public/models/dzire-poster.webp`, then `npm run icons` (og-image). Done this way for the Dzire (1200×900, car spans 66 % of the width like the old poster) rather than the model brief's 1600×1000 Blender render, so the poster and the viewer's first frame match exactly.
+### 3D car viewer (Phase 3, splat rework 2026-10-07)
+- **Change:** the procedural Blender Dzire (`tools/model/`, GLB, `<model-viewer>`, `@gltf-transform/cli`) is removed. The car is now a photoreal **Gaussian-splat scan** rendered with **Spark** (`@sparkjsdev/spark` 2.3.1, MIT, World Labs) on three.js 0.186. Spark was preferred over mkkellogg/GaussianSplats3D per the change request; it loads SOG/SPZ/PLY and needs WebGL2.
+- **[TBD: splat scan]** `public/car-3d/dzire.sog` / `dzire-mobile.sog` don't exist yet. `carModel.splat` in `site.ts` is `null`, so the stages show the real-photo poster only and download no 3D code. Once a scan arrives: `npm run splats -- <scan>` → set `carModel.splat` → tune `carModel.hotspotAnchors`.
+- **Files:** `src/components/CarStage.astro` (markup + gating), `src/scripts/car-viewer.ts` (three.js/Spark, lazy `import()`), `scripts/splats.mjs` (compression), `scripts/car-poster.mjs` (poster).
+- **Poster:** photo 02 cropped to ~1.4:1 around the car → `public/car-3d/dzire-poster-{640,1200}.webp` (32 / 79 KB), `srcset`, hero `fetchpriority=high`. `npm run icons` builds `og-image.jpg` from it (cover crop 1200×630 + taxi strip).
+- **Why no 360 photo spin:** the 9 photos aren't a turntable set. There are 3 landscape exterior angles with different backgrounds, plus portrait close-ups (01 also has a showroom employee in frame). A spin made from them jumps between scenes. Single-photo poster instead; the splat provides the 360.
+- **Load order:** poster instantly → after the visitor's first input (facade) and within 300 px of the viewport → `import('car-viewer')` (~3 MB min / ~1 MB gzip / 0.76 MB brotli: three.js + Spark with its WASM inlined) → the splat download with the royal progress bar (`role=progressbar`, `aria-valuenow`) → canvas fades in, poster fades out. Both stages share one download (memoised fetch); the Our Car stage mounts only when scrolled near.
+- **File per device:** `(max-width: 1023px), (pointer: coarse)` → `dzire-mobile.sog` (≤ 5 MB), else `dzire.sog` (≤ 10 MB). Verified: 1440 → desktop file; 768 and 360 touch → mobile file; one request each.
+- **Fallbacks (poster stays, no 3D JS downloaded):** no WebGL2; low-end = motion tier `lite`, `hardwareConcurrency ≤ 4`, Save-Data, or `deviceMemory < 4`. Load/parse error or `webglcontextlost` → `data-state=error`, canvas removed, poster back and announced again. All verified in Playwright (WebGL2 stubbed, `?motion=lite`, 404 file).
+- **Behaviour (OrbitControls):** auto-rotate 25°/s (`autoRotateSpeed = 25/6`, delta-time based); pauses on drag/zoom, resumes 3 s after release; **pause/play button** (WCAG 2.2.2, `aria-label` swaps) whose pause survives drags; drag to orbit; wheel/pinch zoom clamped to 0.6–1.4× the fit distance; no pan; polar angle 40°–88°; `touch-action: pan-y` so vertical swipes still scroll the page on phones; `data-lenis-prevent` on the canvas so the wheel zooms instead of scrolling. The camera fits the car's bounding sphere to the stage aspect; the opening view is front-left 35°/76°, matching the poster angle. All measured in Playwright.
+- **Hint chip** "Drag to rotate 360°" appears on ready and fades on the first OrbitControls `start`.
+- **Contact shadow:** a radial-gradient (royal-deep) plane under the car's bounding box; no lights or shadow maps (splats are unlit).
+- **Hotspots (3D-anchored):** the 3 Features labels sit at anchors given in car-box units (`carModel.hotspotAnchors`) and are projected to screen every frame. A label hides when its surface normal faces away, and flips to the dot's left on the right half so it never leaves the stage (0 px overflow over 30 samples at 360 px). `aria-hidden`: the Features list next to the viewer carries the same text.
+- **Reduced motion:** splat still loads (it's content), but no auto-rotate, no pause button (nothing moves), no scroll-linked turn, no float. **Scroll-linked turn** (tier `full` only): ScrollTrigger turns the car's pivot (hero 0→90°, Our Car 90→180°); reversible.
+- **Perf:** render loop runs only while the stage intersects the viewport; pixel ratio capped at 1.5 (`ponytail:` note: adapt to fps if phones stutter); no MSAA (Spark's recommendation).
+- **A11y:** canvas `role=img` + "3D model of the Maruti Suzuki Dzire Tour S. Drag to rotate."; poster `aria-hidden` while the 3D view is shown.
+- **QA override:** `?splat=/path.sog` loads any same-origin splat (off-origin values are ignored; verified).
+- **Compression:** `npm run splats -- <scan> [splat-transform actions]` (`@playcanvas/splat-transform` 3.10, MIT). It writes SOG, walks a quality ladder (SH bands 3→0, then 75/50/35/25 % of splats) and keeps the first step under budget: desktop ≤ 10 MB, mobile ≤ 5 MB. The mobile file starts at the desktop file's step. It fails loudly if even 25 % is over. Extra actions (e.g. `-r 180,0,0` for upside-down scans, `-B` box crop) run first. The viewer expects the car facing +z, roof +y. Tested with Spark's sample splat: 4.0 MB SPZ → 3.0 MB SOG in 7.6 s; tiny test budgets exercised every rung.
+- **Dropped:** AR "View in your space". Scene Viewer / Quick Look need GLB/USDZ, not splats, and AR isn't in the rework list. Revisit with Spark's WebXR (`SparkXr`) if wanted.
+- **Deps:** + `@sparkjsdev/spark`, `three`, dev `@types/three`, `@playcanvas/splat-transform`, `@types/node` (previously came in transitively via gltf-transform; `astro check` needs it). − `@google/model-viewer`, `@gltf-transform/cli`. `webgpu` (splat-transform dep) postinstall denied in `allowScripts`: it only strips a macOS quarantine flag.
+- **Console:** 0 errors. One Windows/ANGLE shader-compiler note from Spark's shader (`X3203 signed/unsigned mismatch`), upstream and harmless. model-viewer's debug logs are gone.
+- **Build:** `chunkSizeWarningLimit: 3200` (the lazy viewer chunk only; comment in `astro.config.mjs`).
 
 ### Driver gallery (Phase 4)
 - **Pipeline:** `npm run drivers` = `scripts/drivers.mjs`. Every photo in `assets/drivers-original/` → `public/drivers/<name>-{320,640,960,1280}.{avif,webp}` (AVIF q50, WebP q75). `.rotate()` bakes in EXIF orientation; sharp drops all metadata by default, and the script **re-reads each output and throws if EXIF/XMP/IPTC is present**. `public/drivers/` is wiped and rebuilt each run so removed photos don't stay online. Widths live in `site.ts` (`driverPhotoWidths`) and are shared by the script (Node 24 type stripping imports `.ts` directly) and the component. `sharp` is now a direct devDependency (it was only transitive via Astro).
@@ -210,41 +214,13 @@ Format: skill → phase(s) used, or "not relevant".
 - **Console:** 0 errors and 0 warnings on load at every width and tier. model-viewer 4.3.1 (latest) still prints debug `console.log`s (`[$updateSource] called!`, `IntersectionObserver fired!`). They now appear only after the first interaction. Not errors. Removing them would need a custom build plugin, and dropping all console output would also hide real errors, so they stay until upstream removes them.
 - **Not automated:** no committed Playwright suite (would add `@playwright/test`, ~100 MB of browsers, for a one-page site). Scenarios above are reproducible via the Playwright MCP. AR still needs a real phone.
 
-## 3D model assumptions (Phase 3a — check against new photos)
-
-- **Method:** body and greenhouse are lofted from analytic profile curves (roofline, beltline, sill, plan width) in `build_car.py`, not a hand-pushed sub-d cage — every dimension is one editable number. Wheel arches are boolean cuts.
-- **Cameras:** photos 03/04 are solved from the wheels only (exact from spec), sharing one focal length (4521 px @ 4160 px). 02 uses that lens plus estimated fascia points. 05 is a crop with its own solved lens. 01 is hand-placed (its points were too uncertain to solve). Treat 01/02/05 overlays as approximate.
-- **Photo 04 vs 03:** with near-mirror cameras the model matches 03 but sits ~4 % taller than the car in 04 above the wheels. A symmetric car can't fit both, so 04 likely has lens distortion / non-uniform resize. 03 is treated as the blueprint (as the brief specifies).
-- Front/rear track 1.52 m and overhangs 0.73 / 0.815 m from `specs.json` (estimates), consistent with the photo 03 overlay.
-- Beltline ≈ 0.985 m at the A-pillar rising to ≈ 1.04 m at the C-pillar; boot deck ≈ 1.13 m (raised from 1.05 m in round 1 after photo 03/01); roof peak 1.47 m (+ shark fin → 1.525 m).
-- B-pillar at z ≈ −0.27…−0.15 m (from car centre), estimated from photos 03/04.
-- Wheel cover modelled at Ø 0.38 m with 10 turbine slots (photos 03/04).
-- Block-out measures 3.995 × 1.738 × 1.470 m (no fin), 27.6 k triangles.
-- **Part placement (round 2):** `tools/model/pick.py` back-projects measured photo pixels through the solved cameras onto the body. Front parts use photo 05 anchors, side parts use photo 03. Rear lamp/garnish heights come from photo 03 (lamp y 0.77–1.00 m). Their outlines are eyeballed from photo 01, whose camera is too rough to pick from.
-- Upper bar y 0.696–0.785 m, x ±0.51 m; red line y 0.684–0.696 m; grille y 0.39–0.675 m (hexagonal, narrower at the bottom as in photo 05, not "wider at the bottom" as the brief says); 4 slats.
-- Headlamp wraps back to z ≈ 1.64 m (photo 03); tail lamp wraps only ~0.1 m onto the side (photo 03); garnish y 0.915–0.975 m.
-- Mirror caps (round 3): bevelled box 0.17 × 0.10 × 0.10 m centred at x 0.92, y 1.03, z 0.72 m, swept back 8°, chrome glass on the rear face. Position from the photo 04 overlay (round 2 cap sat ~0.16 m too far back and ~0.05 m too high). Overall width incl. mirrors ≈ 2.01 m (not in brochure). Base flag is a box, not the brief's triangle.
-- Shark fin peak set to the brochure's 1.525 m overall height (z −0.56…−0.76 m).
-- Interior: only the parts visible above the beltline (dash, screen, RHD steering wheel, seat backs, headrests, black cabin trim). Cushions, floor and gear lever are hidden inside the solid body, so they're skipped.
-- **Round 3 details:**
-  - Badges: generic chrome oval with a black inner ring (front on the upper bar, rear above the garnish) + a plain chrome bar where the model script sits (left of the boot). No Suzuki "S", no DZIRE wordmark (§6).
-  - Plates: 500 × 120 mm (Indian standard size) white plate on a black holder; "DRIVER MITRA" is real geometry in Blender's built-in DejaVu Sans, so there are no textures. Front plate centred on the grille at y 0.50 m, rear at y 0.80 m below the garnish. The rear plate recess is suggested by the boot shut line, not a real dent.
-  - Garnish chrome is inset 7 mm below the bar's top edge so black frames it on both sides. In flat studio light, chrome on the bar's edge disappeared against the white paint.
-  - Spoiler lip rises 45 mm above the deck and overhangs the rear face by ~3 cm (photo 01).
-  - Rear door window black surround = gloss-black greenhouse band z −0.98…−1.22 m (quarter glass + frame read as one dark piece; no separate divider).
-  - Panel gaps are 5 mm dark strips projected onto the body (`closest_point_on_mesh`), not cut geometry: hood clamshell line (above the upper bar, along the headlamp tops and the shoulder to the A-pillar), front-door leading edge z ≈ 0.85, door split z −0.21, rear door trailing edge z −1.23 curving forward around the rear arch (the rear handle at z −1.09 must sit on the rear door), door bottoms y 0.33, boot lid loop (inside the tail lamps, under the plate at y 0.66, along the deck sides, across at z −1.47).
-  - Fuel lid: 0.15 m rounded square at x +0.88 (left side), y 0.85, z −1.47 (photo 04).
-  - Bumpers: front lip line y 0.345; rear crease y 0.58; diffuser U-line y 0.385 rising to 0.50; 4 sensor dots at x ±0.18, ±0.50, y 0.48.
-  - Rear glass: 8 defogger lines z −1.32…−0.98 over 85 % of the glass width; HMSL 0.28 m wide at the top edge (z −0.88).
-- **Triangles:** 42.6k, below the brief's 60–120k range. Smoothness at viewer distance is fine; spend more only if close-ups need it (subdivide the Body rings in `build_body`).
-
 ## Open issues
 - `reference/pamphlet.jpg` is **missing** from the project. Needed in Phase 1 for brand color/energy reference.
-- **3D model:** the site now uses the procedurally built Dzire (`build_car.py`). It's a clean stylised match to the photos, not a scan. If the client later buys or commissions a photoreal GLB, swap it in per README §6.
-- AR ("View in your space") untested on a real Android/iOS phone — Phase 7 device check.
+- **[TBD: splat scan]** No Gaussian-splat scan of the car yet. The stages show photo 02 until `public/car-3d/dzire.sog` + `dzire-mobile.sog` exist and `carModel.splat` is set. Capture: walk-around video/photos of a white Dzire Tour S (ideally outdoors, overcast, no balloons/people), train in Postshot / Polycam / Luma / nerfstudio, export PLY, run `npm run splats`.
+- Poster/og-image photo shows the dealer "DZIRE" display plate and Suzuki badges (real car photo). Fine for showing the product; swap the photo if the client prefers a plain plate.
+- AR removed with model-viewer (splats can't use Scene Viewer / Quick Look).
 - All BRIEF §10 items remain `[TBD]`.
 - **Domain `[TBD]`**: set `SITE_URL` on the host. **Logo `[TBD]`**: replace the checkered icon via `scripts/icons.mjs`. **Address `[TBD]`**: JSON-LD needs street, locality, postcode for Google's local rich result.
 - **Driver photos + consent `[TBD]`**: the gallery shows 4 neutral placeholders. `driversOnRoad` count `[TBD]`. Alt text pattern says "his" (BRIEF §8). Make it gender-aware if any driver is not male.
 - **WhatsApp number `[TBD]`**: is 8296611117 or 9060772111 on WhatsApp? Until confirmed, WhatsApp buttons open WhatsApp without a pre-set recipient.
-- model-viewer 4.3.1 debug `console.log`s: logs, not errors, only after first interaction (Phase 7). Drop when upstream releases a clean version.
 - `₹` glyph is not in Anton's latin subset; renders from the fallback font. Reviewed in Phase 7: looks fine.

@@ -15,7 +15,7 @@ interface Props {
 const { title, description, lang = 'en', noindex = false } = Astro.props;
 const t = getCopy(lang);
 const url = new URL(Astro.url.pathname, Astro.site).href;
-// og:image = the car poster on the brand stage (npm run icons builds it from public/models/dzire-poster.webp).
+// og:image = the car photo poster with a taxi strip (npm run icons builds it from public/car-3d/dzire-poster-1200.webp).
 const image = new URL('/og-image.jpg', Astro.site).href;
 ---
 

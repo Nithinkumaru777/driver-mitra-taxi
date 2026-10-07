@@ -42,11 +42,12 @@ header.writeUInt32LE(ico32.length, 14);
 header.writeUInt32LE(22, 18); // image data offset
 await writeFile('public/favicon.ico', Buffer.concat([header, ico32]));
 
-// og:image: the car poster on the brand's light stage, 1200×630 JPEG (the size and format every share preview accepts).
-const stage = `<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630"><defs><linearGradient id="g" x2="0" y2="1">
-  <stop offset="0" stop-color="#E7EEFA"/><stop offset="1" stop-color="#C8D5EE"/></linearGradient></defs>
-  <rect width="1200" height="630" fill="url(#g)"/><rect y="618" width="1200" height="12" fill="${TAXI}"/></svg>`;
-const car = await sharp('public/models/dzire-poster.webp').resize({ height: 630 }).toBuffer();
-await sharp(Buffer.from(stage)).composite([{ input: car, gravity: 'center' }]).jpeg({ quality: 82, mozjpeg: true }).toFile('public/og-image.jpg');
+// og:image: the car photo poster (npm run car:poster) with a taxi-yellow strip, 1200×630 JPEG (the size and format every share preview accepts).
+const strip = `<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="12"><rect width="1200" height="12" fill="${TAXI}"/></svg>`;
+await sharp('public/car-3d/dzire-poster-1200.webp')
+  .resize(1200, 630, { fit: 'cover', position: 'centre' })
+  .composite([{ input: Buffer.from(strip), gravity: 'south' }])
+  .jpeg({ quality: 82, mozjpeg: true })
+  .toFile('public/og-image.jpg');
 
 console.log('✓ favicon.svg, favicon.ico, apple-touch-icon.png, icon-192/512.png, icon-maskable-512.png, og-image.jpg');

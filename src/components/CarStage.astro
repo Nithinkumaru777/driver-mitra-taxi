@@ -1,15 +1,15 @@
 ---
-// Light "stage" with the 3D car (BRIEF §6). The poster <img> shows instantly and stays as the fallback;
-// <model-viewer> JS is only imported once a stage is near the viewport and WebGL is available.
-import { Box, Rotate3d } from '@lucide/astro';
-import Button from './ui/Button.astro';
+// Light "stage" with the photoreal splat car (BRIEF §6). The real-photo poster shows instantly and stays as the
+// fallback; three.js + Spark (src/scripts/car-viewer.ts) are only imported when a splat file is configured, the
+// device can handle it, and the stage is near the viewport after the visitor's first interaction.
+import { Pause, Play, Rotate3d } from '@lucide/astro';
 import { getCopy, carModel } from '../content/site';
 
 interface Props {
   class?: string;
   /** Above-the-fold stage: load the poster eagerly. */
   eager?: boolean;
-  /** Scroll-linked turn in degrees, added to the camera angle as the stage scrolls through the viewport. */
+  /** Scroll-linked turn in degrees, applied to the car as the stage scrolls through the viewport. */
   orbit?: [from: number, to: number];
 }
 
@@ -20,6 +20,10 @@ const t = getCopy();
 <div
   data-car-stage
   data-orbit={orbit?.join(' ')}
+  data-splat-desktop={carModel.splat?.desktop}
+  data-splat-mobile={carModel.splat?.mobile}
+  data-anchors={JSON.stringify(carModel.hotspotAnchors)}
+  data-label={t.car.modelLabel}
   class:list={[
     'group relative isolate overflow-hidden rounded-card bg-linear-to-b from-royal-tint to-white',
     'after:absolute after:inset-x-0 after:bottom-0 after:-z-10 after:h-1/4 after:bg-royal-tint/60',
@@ -27,40 +31,33 @@ const t = getCopy();
   ]}
 >
   <img
-    src={carModel.poster}
+    src={carModel.poster.src}
+    srcset={carModel.poster.srcset}
+    sizes="(min-width: 1024px) 50vw, 100vw"
     alt={t.car.posterAlt}
     width="1200"
-    height="900"
+    height="857"
     loading={eager ? 'eager' : 'lazy'}
     fetchpriority={eager ? 'high' : 'auto'}
     decoding="async"
-    class="absolute inset-0 size-full object-contain transition-opacity duration-500 group-data-[state=ready]:opacity-0"
+    class="absolute inset-0 size-full object-cover transition-opacity duration-500 group-data-[state=ready]:opacity-0"
   />
-  <model-viewer
-    src={carModel.src}
-    alt={t.car.modelLabel}
-    loading="lazy"
-    camera-controls
-    disable-pan
-    auto-rotate
-    auto-rotate-delay="3000"
-    rotation-per-second="25deg"
-    interaction-prompt="none"
-    camera-orbit="35deg 75deg auto"
-    min-camera-orbit="auto 40deg auto"
-    max-camera-orbit="auto 88deg auto"
-    environment-image="neutral"
-    exposure="0.8"
-    shadow-intensity="1"
-    shadow-softness="1"
-    ar
-    ar-modes="webxr scene-viewer quick-look"
-    class="absolute inset-0 size-full"
-  >
-    <Button slot="ar-button" icon={Box} size="md" class="absolute bottom-3 right-3 [model-viewer:not(:defined)_&]:hidden">
-      {t.car.arButton}
-    </Button>
-  </model-viewer>
+
+  {
+    t.car.hotspots.map((spot, i) => (
+      <span
+        data-hotspot={i}
+        aria-hidden="true"
+        class="group/spot pointer-events-none absolute left-0 top-0 hidden transition-opacity duration-300 group-data-[state=ready]:block data-away:opacity-0"
+      >
+        <span class="absolute -left-2 -top-2 size-4 rounded-full border-2 border-white bg-taxi shadow-lift" />
+        {/* Label sits right of the dot, or left of it on the stage's right side (data-flip) so it never runs off the edge. */}
+        <span class="absolute left-3.5 -top-3 rounded-plate bg-royal-deep/90 px-2 py-1 text-xs font-semibold whitespace-nowrap text-white group-data-flip/spot:left-auto group-data-flip/spot:right-3.5">
+          {spot.label}
+        </span>
+      </span>
+    ))
+  }
 
   <p
     aria-hidden="true"
@@ -68,6 +65,19 @@ const t = getCopy();
   >
     <Rotate3d size={16} aria-hidden="true" />{t.car.dragHint}
   </p>
+
+  <button
+    type="button"
+    data-pause
+    aria-label={t.car.pause}
+    data-label-pause={t.car.pause}
+    data-label-play={t.car.play}
+    hidden
+    class="group/pause absolute bottom-3 right-3 grid size-11 place-items-center rounded-full bg-royal-deep/85 text-white transition hover:bg-royal-deep focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-royal active:scale-95"
+  >
+    <Pause size={20} aria-hidden="true" class="group-data-paused/pause:hidden" />
+    <Play size={20} aria-hidden="true" class="hidden group-data-paused/pause:block" />
+  </button>
 
   <div
     data-progress
@@ -86,67 +96,95 @@ const t = getCopy();
   import { ScrollTrigger, tier } from '../scripts/motion';
 
   const stages = [...document.querySelectorAll<HTMLElement>('[data-car-stage]')];
+  const nav = navigator as Navigator & { deviceMemory?: number; connection?: { saveData?: boolean } };
+
+  // Splat file per device: phones/tablets get the ≤ 5 MB one. ?splat=/path.sog overrides both (QA, same-origin only).
+  const forced = new URLSearchParams(location.search).get('splat');
+  const mobile = matchMedia('(max-width: 1023px), (pointer: coarse)').matches;
+  const urlFor = (stage: HTMLElement) =>
+    forced && /^\/[^/\\]/.test(forced) ? forced : mobile ? stage.dataset.splatMobile : stage.dataset.splatDesktop;
+
+  // Fallbacks: no WebGL2 (Spark needs it), or a low-end / data-saving device → the photo poster stays.
+  let hasWebGL2 = false;
+  try {
+    hasWebGL2 = !!document.createElement('canvas').getContext('webgl2');
+  } catch {}
+  const lowEnd = tier === 'lite' || nav.hardwareConcurrency <= 4 || !!nav.connection?.saveData || (nav.deviceMemory ?? 8) < 4;
   const fail = (stage: HTMLElement) => {
     stage.dataset.state = 'error';
-    stage.querySelector('model-viewer')?.remove(); // poster stays as the fallback
+    stage.querySelector('canvas')?.remove();
+    stage.querySelector('img')!.ariaHidden = null;
+    stage.querySelector<HTMLElement>('[data-pause]')!.hidden = true;
   };
 
-  let hasWebGL = false;
-  try {
-    hasWebGL = !!document.createElement('canvas').getContext('webgl2');
-  } catch {}
-
-  if (hasWebGL) {
-    for (const stage of stages) {
-      const viewer = stage.querySelector('model-viewer')!;
-      const bar = stage.querySelector<HTMLElement>('[data-progress]')!;
-      if (tier === 'reduced') viewer.removeAttribute('auto-rotate');
-
-      viewer.addEventListener('progress', (e: Event) => {
-        const p = (e as CustomEvent<{ totalProgress: number }>).detail.totalProgress;
-        bar.hidden = false;
-        bar.setAttribute('aria-valuenow', String(Math.round(p * 100)));
-        (bar.firstElementChild as HTMLElement).style.transform = `scaleX(${p})`;
+  async function load(stage: HTMLElement, url: string) {
+    const bar = stage.querySelector<HTMLElement>('[data-progress]')!;
+    const pause = stage.querySelector<HTMLButtonElement>('[data-pause]')!;
+    const autoRotate = tier !== 'reduced';
+    bar.hidden = false;
+    try {
+      const { mountCar } = await import('../scripts/car-viewer');
+      const viewer = await mountCar({
+        stage,
+        url,
+        autoRotate,
+        anchors: JSON.parse(stage.dataset.anchors!),
+        onProgress: (p) => {
+          bar.setAttribute('aria-valuenow', String(Math.round(p * 100)));
+          (bar.firstElementChild as HTMLElement).style.transform = `scaleX(${p})`;
+        },
+        onFirstInteraction: () => (stage.dataset.touched = ''),
+        onContextLost: () => fail(stage),
       });
-      viewer.addEventListener('load', () => (stage.dataset.state = 'ready'));
-      viewer.addEventListener('error', () => fail(stage));
-      viewer.addEventListener('camera-change', (e) => {
-        if ((e as CustomEvent<{ source: string }>).detail.source === 'user-interaction') stage.dataset.touched = '';
+      stage.dataset.state = 'ready';
+      viewer.canvas.setAttribute('role', 'img');
+      viewer.canvas.setAttribute('aria-label', stage.dataset.label!);
+      stage.querySelector('img')!.ariaHidden = 'true'; // the 3D view replaces the photo; don't announce both
+
+      // Pause/resume button (WCAG 2.2.2: anything moving on its own for > 5 s needs a way to stop it).
+      pause.hidden = !autoRotate;
+      pause.addEventListener('click', () => {
+        const paused = pause.toggleAttribute('data-paused');
+        pause.setAttribute('aria-label', paused ? pause.dataset.labelPlay! : pause.dataset.labelPause!);
+        viewer.setPaused(paused);
       });
+
+      // Scroll-linked turn (full tier only): the car turns to show its side, then rear, as the page scrolls.
+      if (tier === 'full' && stage.dataset.orbit) {
+        const [from, to] = stage.dataset.orbit.split(' ').map(Number);
+        ScrollTrigger.create({
+          trigger: stage,
+          start: 'clamp(top bottom)',
+          end: 'bottom top',
+          onUpdate: ({ progress }) => viewer.setTurn(from + (to - from) * progress),
+        });
+      }
+    } catch (err) {
+      console.warn('3D car unavailable, showing the photo instead.', err);
+      fail(stage);
     }
+  }
 
-    // The ~285 KB model-viewer bundle (three.js) waits for the visitor's first interaction as well as proximity:
-    // the poster looks the same, and the first load stays free for Call / WhatsApp on slow phones (facade pattern).
+  const ready = stages.filter((s) => urlFor(s));
+  if (hasWebGL2 && !lowEnd && ready.length) {
+    // Facade: the 3D download waits for the first interaction as well as proximity, so the first load stays
+    // free for Call / WhatsApp on slow phones. The poster looks the same until then.
     const firstInput = ['pointerdown', 'pointermove', 'touchstart', 'wheel', 'keydown', 'scroll'];
     const start = () => {
       firstInput.forEach((type) => removeEventListener(type, start));
       const observer = new IntersectionObserver(
         (entries) => {
-          if (!entries.some((e) => e.isIntersecting)) return;
-          observer.disconnect();
-          import('@google/model-viewer').catch(() => stages.forEach(fail));
+          for (const e of entries) {
+            if (!e.isIntersecting) continue;
+            observer.unobserve(e.target);
+            const stage = e.target as HTMLElement;
+            load(stage, urlFor(stage)!);
+          }
         },
         { rootMargin: '300px' },
       );
-      stages.forEach((s) => observer.observe(s));
+      ready.forEach((s) => observer.observe(s));
     };
     firstInput.forEach((type) => addEventListener(type, start, { passive: true }));
-
-    // Scroll-linked orbit (full tier only): the camera turns while auto-rotate keeps spinning the model on top.
-    if (tier === 'full') {
-      for (const stage of stages) {
-        if (!stage.dataset.orbit) continue;
-        const [from, to] = stage.dataset.orbit.split(' ').map(Number);
-        const viewer = stage.querySelector('model-viewer')!;
-        const [theta, ...rest] = viewer.getAttribute('camera-orbit')!.split(' ');
-        ScrollTrigger.create({
-          trigger: stage,
-          start: 'clamp(top bottom)',
-          end: 'bottom top',
-          onUpdate: ({ progress }) =>
-            viewer.setAttribute('camera-orbit', `${parseFloat(theta) + from + (to - from) * progress}deg ${rest.join(' ')}`),
-        });
-      }
-    }
   }
 </script>

@@ -9,7 +9,7 @@ This guide is for anyone looking after the site. You don't need to be a develope
 3. [Change words, phone numbers and other details](#3-change-words-phone-numbers-and-other-details)
 4. [Change prices (daily rent)](#4-change-prices-daily-rent)
 5. [Add a driver photo](#5-add-a-driver-photo)
-6. [Replace the 3D car model](#6-replace-the-3d-car-model)
+6. [Add the 3D car (splat scan)](#6-add-the-3d-car-splat-scan)
 7. [Put the site online (Netlify or Vercel)](#7-put-the-site-online-netlify-or-vercel)
 8. [If something goes wrong](#8-if-something-goes-wrong)
 
@@ -150,52 +150,39 @@ The ₹10,000 booking amount appears in many places in the wording (headline, st
 
 > ⚠️ **Important: `npm run drivers` rebuilds every photo from scratch** using whatever is in `assets/drivers-original/` *on this computer*. If you run it on a different computer that doesn't have the original photos, it will **delete those drivers' photos from the website**. Always run it on a computer that has *all* the original photos (keep them backed up in Google Drive or similar).
 
-## 6. Replace the 3D car model
+## 6. Add the 3D car (splat scan)
 
-The site shows a white **Dzire Tour S** model built by a script (`tools/model/build_car.py`, needs Blender). It's a clean, simplified look-alike, not a photo-real scan. If you later get a more detailed model from a 3D artist or buy a licensed one, here is how to swap it in. It must be the sedan, never a hatchback, and you need it as a **`.glb` file**.
+Right now the site shows a **real photo** of the white Dzire in the top section and in "Our Car". It's built to turn into a **photo-real 3D car** that visitors can spin, once you have a **Gaussian-splat scan** of the car. A splat scan is a 3D capture made from a walk-around video or lots of photos. Until you add one, the site simply keeps showing the photo, and nothing is broken.
 
-1. Name the file `dzire-tour-s.glb` and put it in `assets/models/`.
+1. **Get a scan.** Film a slow walk-around of a white Dzire Tour S (two loops: one at waist height, one higher). Outdoors on a cloudy day is best, with no people, balloons or other cars close by. Turn it into a splat with an app such as Polycam, Luma or Postshot (or ask a developer), and export it as a **`.ply`** file. The car must be the sedan, never a hatchback.
 
-2. **Compress it** so it loads fast on mobile data. Run this as one line:
+2. Name the file `dzire.ply` and put it in `assets/car-3d/` (create the folder if needed). This folder is not uploaded to GitHub, because scans are very large.
+
+3. **Compress it** so it loads fast on mobile data:
 
    ```
-   npm run models:compress -- assets/models/dzire-tour-s.glb public/models/dzire-tour-s.glb
+   npm run splats
    ```
 
-   This usually shrinks the file by 80–90%. Aim for **under 3 MB**. If it's still bigger, ask the 3D artist for a lighter version (fewer polygons, smaller textures).
+   This makes two files in `public/car-3d/`: `dzire.sog` for computers (10 MB or less) and `dzire-mobile.sog` for phones (5 MB or less). If the scan is too big, it automatically lowers the quality step by step until the file fits. If it says the file is still too big at the lowest step, ask a developer to crop the room out of the scan.
 
-3. **Point the site at it.** In `src/content/site.ts`, find `carModel` and change the `src` line:
+   If the car shows **upside down** or facing the wrong way later, add a turn after the file name, for example: `npm run splats -- assets/car-3d/dzire.ply -r 180,0,0`.
+
+4. **Switch it on.** In `src/content/site.ts`, find `carModel` and change the `splat` line to:
 
    ```ts
-   export const carModel = {
-     src: '/models/dzire-tour-s.glb',
-     poster: '/models/dzire-poster.webp',
-   };
+   splat: { desktop: '/car-3d/dzire.sog', mobile: '/car-3d/dzire-mobile.sog' } as { desktop: string; mobile: string } | null,
    ```
 
-4. Run `npm run dev` and check the car at <http://localhost:4321>. It should spin, and you should be able to drag it around.
+5. Run `npm run dev`, open <http://localhost:4321>, and move the mouse once. The car should appear and turn slowly. Drag it to spin it, and scroll the mouse wheel over it to zoom.
 
-5. **Update the still picture (the "poster").** Visitors see this image first, while the 3D car loads. It's also used when sharing the link on WhatsApp/Facebook.
-   1. With `npm run dev` running, open the site in **Chrome**. Maximise the window and move the mouse a little. Wait until the 3D car at the top is spinning.
-   2. Press `F12`, then click the **Console** tab. (The first time you paste there, Chrome may ask you to type `allow pasting` and press Enter. That's normal.)
-   3. Paste this line and press Enter. It stops the spinning and turns the car to the front-side view:
+6. **Check the yellow labels** ("Spacious boot", "CNG option", "Comfortable rear seats"). They are pinned to points on the car. If one sits in the wrong place, a developer adjusts `hotspotAnchors` in the same `carModel` block (about 10 minutes).
 
-      ```js
-      el = document.querySelector('model-viewer'); el.removeAttribute('auto-rotate'); el.resetTurntableRotation()
-      ```
+7. Put the site online ([section 7](#7-put-the-site-online-netlify-or-vercel)).
 
-   4. Paste this line and press Enter. It downloads `dzire-poster.webp`:
+**Changing the photo:** the photo comes from `reference/dzire-3d/photos/02-front-three-quarter-left.jpg`. To use a different one, replace that file (or change the file name in `scripts/car-poster.mjs`), then run `npm run car:poster` and `npm run icons`. The second command also updates the picture shown when the link is shared on WhatsApp/Facebook.
 
-      ```js
-      a = document.createElement('a'); a.href = URL.createObjectURL(await el.toBlob({ mimeType: 'image/webp', qualityArgument: 0.85 })); a.download = 'dzire-poster.webp'; a.click()
-      ```
-
-   5. Move the downloaded file into `public/models/`, replacing the old one.
-   6. Run `npm run icons` to refresh the social-sharing image.
-
-   If this step feels too technical, ask a developer. It takes them five minutes.
-
-6. Put the site online ([section 7](#7-put-the-site-online-netlify-or-vercel)).
+**Tip for checking:** you can try any splat file in `public/` without changing `site.ts` by adding `?splat=` to the address, e.g. <http://localhost:4321/?splat=/car-3d/dzire.sog>.
 
 ## 7. Put the site online (Netlify or Vercel)
 
@@ -251,8 +238,8 @@ Once you've bought the domain (e.g. `drivermitrataxi.in`): in Netlify go to **Do
 | `npm` is not recognised | Node.js isn't installed, or the terminal was open before you installed it. Close the terminal, open a new one and try again. |
 | The page doesn't change after an edit | Make sure you saved the file. Refresh the browser with `Ctrl + F5`. |
 | The live site didn't update | Open the **Deploys** page on Netlify (or **Deployments** on Vercel). A red/failed deploy shows the error message. It's usually the same error `npm run build` shows on your computer. |
-| The 3D car shows only a still picture | That's normal on older phones and before the visitor scrolls or taps. The 3D car loads after the first touch. If it never loads, check the `src` in `carModel` matches the file name in `public/models/`. |
+| The 3D car shows only a still picture | Normal until a splat scan is added (section 6). After that, it's still normal on older or low-memory phones, with Data Saver on, and before the visitor first scrolls or taps. If it never loads on a good computer, check that `carModel.splat` in `site.ts` matches the file names in `public/car-3d/`. |
 
 ### For developers
 
-Astro 7 (static) + Tailwind CSS v4 + GSAP/Lenis + `@google/model-viewer`. All copy and business data is in `src/content/site.ts`. Build decisions and their reasons are recorded in `PROGRESS.md`, and the original brief is in `BRIEF.md`. `npm test` runs the enquiry-form tests. npm installs use `registry.yarnpkg.com` (`.npmrc`), because `registry.npmjs.org` was blocked on the build network. Remove `.npmrc` if that doesn't apply to you.
+Astro 7 (static) + Tailwind CSS v4 + GSAP/Lenis + three.js with Spark (Gaussian-splat car viewer). All copy and business data is in `src/content/site.ts`. Build decisions and their reasons are recorded in `PROGRESS.md`, and the original brief is in `BRIEF.md`. `npm test` runs the enquiry-form tests. npm installs use `registry.yarnpkg.com` (`.npmrc`), because `registry.npmjs.org` was blocked on the build network. Remove `.npmrc` if that doesn't apply to you.

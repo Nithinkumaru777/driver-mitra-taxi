@@ -30,7 +30,8 @@ export default defineConfig({
   ],
   vite: {
     plugins: [tailwindcss()],
-    // model-viewer bundles three.js (~1 MB min, ~285 KB gzip). It's a lazy chunk, imported only when a car stage nears the viewport.
-    build: { chunkSizeWarningLimit: 1100 },
+    // The car viewer chunk = three.js + Spark with its WASM inlined (~3 MB min, ~1 MB gzip). It's lazy: imported only
+    // when a splat is configured, the device passes the low-end checks and a car stage nears the viewport.
+    build: { chunkSizeWarningLimit: 3200 },
   }
 });

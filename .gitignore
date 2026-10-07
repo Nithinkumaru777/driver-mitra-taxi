@@ -33,5 +33,5 @@ assets/drivers-original/*
 
 # Maruti Suzuki brochure is copyrighted: modelling reference only, never publish.
 reference/dzire-3d/brochure/
-# Blender scratch output
-tools/model/out/
+# Raw splat scans are hundreds of MB: only the compressed public/car-3d/*.sog files are published.
+assets/car-3d/
