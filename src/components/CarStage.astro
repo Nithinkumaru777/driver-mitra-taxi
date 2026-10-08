@@ -30,18 +30,26 @@ const t = getCopy();
     className,
   ]}
 >
-  <img
-    src={carModel.poster.src}
-    srcset={carModel.poster.srcset}
-    sizes="(min-width: 1024px) 50vw, 100vw"
-    alt={t.car.posterAlt}
-    width="1200"
-    height="857"
-    loading={eager ? 'eager' : 'lazy'}
-    fetchpriority={eager ? 'high' : 'auto'}
-    decoding="async"
-    class="absolute inset-0 size-full object-cover transition-opacity duration-500 group-data-[state=ready]:opacity-0"
-  />
+  <div data-photo-slideshow class="absolute inset-0 size-full transition-opacity duration-500 group-data-[state=ready]:opacity-0">
+    {[
+      '/car-3d/photos/02-front-three-quarter-left.jpg',
+      '/car-3d/photos/03-side-profile-right.jpg',
+      '/car-3d/photos/01-rear-three-quarter-left.jpg',
+      '/car-3d/photos/04-side-profile-left.jpg',
+      '/car-3d/photos/08-front-wide-lights-on.jpg',
+      '/car-3d/photos/09-interior-dashboard.jpg'
+    ].map((src, i) => (
+      <img
+        src={src}
+        alt={t.car.posterAlt}
+        loading={eager && i === 0 ? 'eager' : 'lazy'}
+        fetchpriority={eager && i === 0 ? 'high' : 'auto'}
+        decoding="async"
+        class={`absolute inset-0 size-full object-cover transition-opacity duration-1000 ${i === 0 ? 'opacity-100' : 'opacity-0'}`}
+        data-slide={i}
+      />
+    ))}
+  </div>
 
   {
     t.car.hotspots.map((spot, i) => (
@@ -187,4 +195,27 @@ const t = getCopy();
     };
     firstInput.forEach((type) => addEventListener(type, start, { passive: true }));
   }
+
+  // Fallback slideshow logic: shifts photos every 3.5s if 3D viewer isn't ready
+  stages.forEach((stage) => {
+    const slides = stage.querySelectorAll<HTMLImageElement>('[data-slide]');
+    if (slides.length <= 1) return;
+    
+    let current = 0;
+    const nextSlide = () => {
+      if (stage.dataset.state === 'ready' || stage.dataset.state === 'error') return; // Stop shifting if 3D loads or hard fails
+      slides[current].classList.replace('opacity-100', 'opacity-0');
+      current = (current + 1) % slides.length;
+      slides[current].classList.replace('opacity-0', 'opacity-100');
+      
+      // Stop slideshow completely if reduced motion is preferred
+      if (tier !== 'reduced') {
+        setTimeout(nextSlide, 3500);
+      }
+    };
+    
+    if (tier !== 'reduced') {
+      setTimeout(nextSlide, 3500);
+    }
+  });
 </script>

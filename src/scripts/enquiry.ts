@@ -2,7 +2,7 @@
 // To plug in a real backend or email service later, change submitEnquiry() only.
 import { whatsappHref, type Copy } from '../content/site.ts';
 
-export type Enquiry = { name: string; mobile: string; city: string; plan: string; licence: string; message: string };
+export type Enquiry = { name: string; mobile: string; city: string; plan: string; licence: string; referral: string; message: string };
 export type EnquiryErrors = Partial<Record<keyof Copy['form']['errors'], string>>;
 
 /**
@@ -36,6 +36,7 @@ export function enquiryMessage(e: Enquiry, t: Copy): string {
     `${f.city}: ${e.city.trim()}`,
     `${f.plan}: ${t.plans.planTitle(Number(e.plan))}`,
     `${f.licence} ${e.licence}`,
+    ...(e.referral.trim() ? [`${f.referralCode}: ${e.referral.trim()}`] : []),
     ...(e.message.trim() ? [`${f.message}: ${e.message.trim()}`] : []),
   ].join('\n');
 }

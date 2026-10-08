@@ -37,10 +37,20 @@ const rows = [
           </li>
         ))}
       </ul>
-      <div class="grid aspect-video place-content-center justify-items-center gap-2 rounded-card border-2 border-dashed border-mist/40 text-center text-mist">
-        <MapPin size={32} aria-hidden="true" />
-        <p>{t.contact.mapComing} {contact.mapEmbedUrl}</p>
-      </div>
+      {contact.mapEmbedUrl === TBD ? (
+        <div class="grid aspect-video place-content-center justify-items-center gap-2 rounded-card border-2 border-dashed border-mist/40 text-center text-mist">
+          <MapPin size={32} aria-hidden="true" />
+          <p>{t.contact.mapComing}</p>
+        </div>
+      ) : (
+        <iframe
+          title={t.contact.map}
+          src={contact.mapEmbedUrl}
+          loading="lazy"
+          referrerpolicy="no-referrer-when-downgrade"
+          class="aspect-video w-full rounded-card shadow-card"
+        ></iframe>
+      )}
     </div>
 
     <div class="mt-16 flex flex-col gap-6 border-t border-white/15 pt-8 lg:flex-row lg:items-center lg:justify-between">

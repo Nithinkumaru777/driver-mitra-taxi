@@ -13,10 +13,10 @@ export const contact = {
     { display: '8296611117', tel: '+918296611117' },
     { display: '9060772111', tel: '+919060772111' },
   ],
-  whatsapp: TBD, // digits with country code, e.g. 91XXXXXXXXXX
-  email: TBD,
-  address: TBD,
-  mapEmbedUrl: TBD,
+  whatsapp: '919060772111', // digits with country code, e.g. 91XXXXXXXXXX
+  email: 'arunenterprises.help@gmail.com',
+  address: 'ARUN ENTERPRISES (Driver Mitra Taxi), Bengaluru',
+  mapEmbedUrl: 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3888.7567784013444!2d77.5273987758364!3d12.92361008738722!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3bae3fa80a0fead9%3A0xc1710e44278d5cad!2sARUN%20ENTERPRISES%20(%20Driver%20Mitra%20Taxi)!5e0!3m2!1sen!2sin!4v1714902137286!5m2!1sen!2sin',
 };
 
 /** wa.me link. Until the WhatsApp number is confirmed, opens WhatsApp with the text so the driver can pick a contact. */
@@ -66,10 +66,10 @@ export const driverPhotoWidths = [320, 640, 960, 1280];
  * The placeholder-* photos are neutral stand-ins until real handover photos arrive.
  */
 export const gallery: { image: string; name: string; city: string; plan: string; handoverDate: string; quote?: string }[] = [
-  { image: 'placeholder-1', name: TBD, city: TBD, plan: TBD, handoverDate: TBD },
-  { image: 'placeholder-2', name: TBD, city: TBD, plan: TBD, handoverDate: TBD },
-  { image: 'placeholder-3', name: TBD, city: TBD, plan: TBD, handoverDate: TBD },
-  { image: 'placeholder-4', name: TBD, city: TBD, plan: TBD, handoverDate: TBD },
+  { image: 'vinay', name: 'Vinay', city: TBD, plan: TBD, handoverDate: TBD },
+  { image: 'syed-riyaz', name: 'Syed Riyaz', city: TBD, plan: TBD, handoverDate: TBD },
+  { image: 'krishna', name: 'Krishna', city: TBD, plan: TBD, handoverDate: TBD },
+  { image: 'sivakumar', name: 'Sivakumar', city: TBD, plan: TBD, handoverDate: TBD },
 ];
 
 /* ---------- Translatable copy ---------- */
@@ -132,15 +132,15 @@ const en = {
     specsHeading: 'Specifications',
     featuresHeading: 'Features',
     specs: [
-      { label: 'Fuel type', value: TBD },
-      { label: 'Seating', value: TBD },
-      { label: 'Mileage', value: TBD },
-      { label: 'Boot space', value: TBD },
+      { label: 'Fuel type', value: 'Petrol & CNG (Bi-Fuel)' },
+      { label: 'Seating', value: '5 Persons' },
+      { label: 'Mileage', value: 'Up to 33.73 km/kg (CNG)' },
+      { label: 'Boot space', value: '382 Litres' },
     ],
     hotspots: [
-      { label: 'Spacious boot', detail: TBD },
-      { label: 'CNG option', detail: TBD },
-      { label: 'Comfortable rear seats', detail: TBD },
+      { label: 'Spacious boot', detail: '382 Litres of luggage space for airport drops' },
+      { label: 'CNG option', detail: 'Company-fitted S-CNG delivering 33.73 km/kg' },
+      { label: 'Comfortable rear seats', detail: 'Rear AC vents and center armrest for passenger comfort' },
     ],
   },
   plans: {
@@ -188,6 +188,7 @@ const en = {
     licence: 'Do you have a commercial driving licence/badge?',
     yes: 'Yes',
     no: 'No',
+    referralCode: 'Referral code',
     message: 'Message',
     optional: 'optional',
     submit: 'Send on WhatsApp',

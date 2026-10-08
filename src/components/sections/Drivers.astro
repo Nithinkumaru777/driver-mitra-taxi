@@ -28,10 +28,12 @@ const [counterPre, counterPost] = t.drivers.counter('{n}').split('{n}');
         <h2 class="text-h2 text-royal">{t.drivers.heading}</h2>
         <p class="mt-3 max-w-xl text-lg text-ink-muted">{t.drivers.subline}</p>
       </div>
-      <Badge class="self-start px-4 py-2 text-xl md:shrink-0 md:self-auto">
-        <span class="sr-only">{t.drivers.counter(driversOnRoad)}</span>
-        <span aria-hidden="true">{counterPre}<span data-count>{driversOnRoad}</span>{counterPost}</span>
-      </Badge>
+      {driversOnRoad !== TBD && (
+        <Badge class="self-start px-4 py-2 text-xl md:shrink-0 md:self-auto">
+          <span class="sr-only">{t.drivers.counter(driversOnRoad)}</span>
+          <span aria-hidden="true">{counterPre}<span data-count>{driversOnRoad}</span>{counterPost}</span>
+        </Badge>
+      )}
     </div>
     <ul data-gallery class="mt-10 grid grid-cols-2 gap-4 md:grid-cols-4 md:gap-6">
       {gallery.map((d, i) => (
@@ -48,16 +50,20 @@ const [counterPre, counterPost] = t.drivers.counter('{n}').split('{n}');
                   height="800"
                   loading="lazy"
                   decoding="async"
-                  class="aspect-[4/5] w-full object-cover transition-transform duration-500 ease-out group-hover:scale-105"
+                  class="aspect-[4/5] w-full object-cover object-top transition-transform duration-500 ease-out group-hover:scale-105"
                 />
               </picture>
               <span aria-hidden="true" class="absolute inset-x-0 bottom-0 translate-y-full bg-royal-deep/90 px-3 py-2 text-left text-sm font-semibold text-white transition-transform duration-300 ease-out group-hover:translate-y-0 group-focus-visible:translate-y-0">
-                {d.name}, {d.city}
+                {d.name}{d.city !== TBD ? `, ${d.city}` : ''}
               </span>
             </button>
             <figcaption class="mt-3">
-              <p class="font-semibold">{d.name}, {d.city}</p>
-              <p class="text-sm text-ink-muted">{d.plan} | {d.handoverDate}</p>
+              <p class="font-semibold">{d.name}{d.city !== TBD ? `, ${d.city}` : ''}</p>
+              {(d.plan !== TBD || d.handoverDate !== TBD) && (
+                <p class="text-sm text-ink-muted">
+                  {[d.plan !== TBD ? d.plan : '', d.handoverDate !== TBD ? d.handoverDate : ''].filter(Boolean).join(' | ')}
+                </p>
+              )}
               {d.quote && <blockquote class="mt-2 text-sm italic">“{d.quote}”</blockquote>}
             </figcaption>
           </figure>

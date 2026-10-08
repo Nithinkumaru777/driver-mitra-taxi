@@ -83,6 +83,14 @@ const choice = 'flex min-h-12 cursor-pointer items-center gap-3 rounded-plate bo
       </fieldset>
 
       <label class:list={[label, 'md:col-span-2']}>
+        {t.form.referralCode} <span class="font-normal text-ink-muted">({t.form.optional})</span>
+        <span class="relative mt-2 block">
+          <input name="referral" type="text" autocomplete="off" class:list={[field, 'peer rounded-plate']} />
+          <span aria-hidden="true" class={bar}></span>
+        </span>
+      </label>
+
+      <label class:list={[label, 'md:col-span-2']}>
         {t.form.message} <span class="font-normal text-ink-muted">({t.form.optional})</span>
         <span class="relative mt-2 block">
           <textarea name="message" rows="3" class:list={[field, 'peer block rounded-plate py-3']}></textarea>
@@ -124,7 +132,7 @@ const choice = 'flex min-h-12 cursor-pointer items-center gap-3 rounded-plate bo
   const read = (): Enquiry => {
     const d = new FormData(form);
     const get = (k: string) => String(d.get(k) ?? '');
-    return { name: get('name'), mobile: get('mobile'), city: get('city'), plan: get('plan'), licence: get('licence'), message: get('message') };
+    return { name: get('name'), mobile: get('mobile'), city: get('city'), plan: get('plan'), licence: get('licence'), referral: get('referral'), message: get('message') };
   };
 
   const showErrors = (errors: EnquiryErrors) => {

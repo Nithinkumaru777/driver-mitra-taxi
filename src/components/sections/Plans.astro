@@ -21,7 +21,6 @@ const glow =
             {popular && <Badge class="absolute -top-3 right-5">{t.plans.mostPopular}</Badge>}
             <span aria-hidden="true" data-count class="font-display text-[5.5rem] leading-none text-royal">{plan.years}</span>
             <h3 class="mt-2 text-h3">{t.plans.planTitle(plan.years)}</h3>
-            <p class="mb-6 mt-3 text-lg text-ink-muted">{t.plans.dailyRent(plan.dailyRent)}</p>
             <Button href="#enquire" variant="secondary" data-plan={plan.years} class="mt-auto w-full">
               {t.plans.enquire}
             </Button>
