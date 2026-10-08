@@ -39,9 +39,9 @@ export const driversOnRoad = TBD;
 /** 3D car: a photoreal Gaussian-splat scan rendered with Spark (three.js). Steps in README §6. */
 export const carModel = {
   /** Cropped real photo (npm run car:poster), shown instantly and as the fallback. */
-  poster: { src: '/car-3d/dzire-poster-1200.webp', srcset: '/car-3d/dzire-poster-640.webp 640w, /car-3d/dzire-poster-1200.webp 1200w' },
+  poster: { src: import.meta.env.BASE_URL + 'car-3d/dzire-poster-1200.webp', srcset: import.meta.env.BASE_URL + 'car-3d/dzire-poster-640.webp 640w, ' + import.meta.env.BASE_URL + 'car-3d/dzire-poster-1200.webp 1200w' },
   /**
-   * [TBD: splat scan] Set to { desktop: '/car-3d/dzire.sog', mobile: '/car-3d/dzire-mobile.sog' } once
+   * [TBD: splat scan] Set to { desktop: import.meta.env.BASE_URL + 'car-3d/dzire.sog', mobile: import.meta.env.BASE_URL + 'car-3d/dzire-mobile.sog' } once
    * `npm run splats` has built them. Until then the stage shows the poster photo only.
    */
   splat: null as { desktop: string; mobile: string } | null,

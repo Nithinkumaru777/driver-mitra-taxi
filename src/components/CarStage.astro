@@ -32,12 +32,12 @@ const t = getCopy();
 >
   <div data-photo-slideshow class="absolute inset-0 size-full transition-opacity duration-500 group-data-[state=ready]:opacity-0">
     {[
-      '/car-3d/photos/02-front-three-quarter-left.jpg',
-      '/car-3d/photos/03-side-profile-right.jpg',
-      '/car-3d/photos/01-rear-three-quarter-left.jpg',
-      '/car-3d/photos/04-side-profile-left.jpg',
-      '/car-3d/photos/08-front-wide-lights-on.jpg',
-      '/car-3d/photos/09-interior-dashboard.jpg'
+      import.meta.env.BASE_URL + 'car-3d/photos/02-front-three-quarter-left.jpg',
+      import.meta.env.BASE_URL + 'car-3d/photos/03-side-profile-right.jpg',
+      import.meta.env.BASE_URL + 'car-3d/photos/01-rear-three-quarter-left.jpg',
+      import.meta.env.BASE_URL + 'car-3d/photos/04-side-profile-left.jpg',
+      import.meta.env.BASE_URL + 'car-3d/photos/08-front-wide-lights-on.jpg',
+      import.meta.env.BASE_URL + 'car-3d/photos/09-interior-dashboard.jpg'
     ].map((src, i) => (
       <img
         src={src}
