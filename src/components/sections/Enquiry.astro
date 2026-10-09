@@ -125,6 +125,10 @@ const choice = 'flex min-h-12 cursor-pointer items-center gap-3 rounded-plate bo
   const reopen = done.querySelector<HTMLAnchorElement>('[data-reopen]')!;
   const keys = ['name', 'mobile', 'city', 'plan', 'licence'] as const;
 
+  // A driver's shared link carries their code as ?ref=AE7KQ3M; fill it in so the friend doesn't have to.
+  const ref = new URLSearchParams(location.search).get('ref')?.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 12);
+  if (ref) form.querySelector<HTMLInputElement>('[name="referral"]')!.value = ref;
+
   // JS shows its own messages; without JS the native required/pattern checks still apply.
   form.noValidate = true;
   let submitted = false;
